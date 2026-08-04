@@ -1,0 +1,1158 @@
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+  <meta charset="UTF-8">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">  
+  <title>Lynk · Private Chat</title>  
+  <!-- Font Awesome 6 -->  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">  
+  <!-- PeerJS -->  
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>    
+  <script src="/lynkio/client.js"></script>
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100dvh;
+      min-height: -webkit-fill-available;
+      background: #f2f4f8;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      color: #1e1e2a;
+      overflow: hidden;
+    }
+
+    /* ========== TWO-COLUMN LAYOUT (desktop first) ========== */
+    .chat {
+      display: flex;
+      flex-direction: row;
+      height: 100dvh;
+      box-shadow: 0 0 30px rgba(0,0,0,0.03);
+    }
+
+    /* ----- FRIENDS PANEL (left sidebar) ----- */
+    .friends-panel {
+      width: 300px;
+      background: #f8fafd;
+      border-right: 1px solid #e6ecf5;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .friends-header {
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .friends-header h3 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #2b3a55;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .add-friend-btn {
+      background: transparent;
+      border: 1px dashed #bac8dc;
+      border-radius: 30px;
+      padding: 0.2rem 1rem;
+      font-size: 0.8rem;
+      color: #3f4a60;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.1s;
+    }
+    .add-friend-btn:hover { background: #e9f0fa; border-style: solid; }
+
+    .recent-inside {
+      padding: 0 1rem 0.5rem;
+    }
+    .recent-header {
+      font-size: 0.8rem;
+      color: #6d7b98;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .recent-list {
+      display: flex;
+      gap: 0.6rem;
+      overflow-x: auto;
+      padding-bottom: 0.2rem;
+      scrollbar-width: thin;
+    }
+    .recent-chip {
+      flex: 0 0 auto;
+      background: #edf2fa;
+      border-radius: 30px;
+      padding: 0.3rem 1rem 0.3rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      border: 1px solid #dbe1ec;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.1s;
+    }
+    .recent-chip i { color: #5e6f8b; }
+    .recent-chip:hover { background: #e2eaf5; }
+
+    .friend-list-vertical {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0.8rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      scrollbar-width: thin;
+    }
+
+    .friend-row {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 40px;
+      padding: 0.4rem 0.8rem 0.4rem 0.5rem;
+      border: 1px solid #e0e8f2;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s;
+      width: 100%;
+    }
+    .friend-row:hover { background: #eef3fc; border-color: #b8cbeb; }
+    .friend-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ccd8ec;
+      color: #1e2b3c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .friend-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .friend-name {
+      font-weight: 500;
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+    .friend-id {
+      font-size: 0.7rem;
+      color: #7b8ba3;
+      font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+    .remove-friend {
+      background: transparent;
+      border: none;
+      color: #99a8c2;
+      font-size: 1.1rem;
+      padding: 0 0.3rem;
+      cursor: pointer;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .remove-friend:hover { color: #c00; background: #ffe3e3; }
+
+    /* ----- MAIN PANEL ----- */
+    .main-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      min-width: 0;
+    }
+
+    .chat-header {
+      background: #ffffff;
+      border-bottom: 1px solid #eeeff2;
+      padding: 0.6rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-weight: 500;
+      font-size: 1.2rem;
+      letter-spacing: -0.3px;
+      color: #252531;
+      margin-right: auto;
+    }
+
+    .user-badge {
+      background: #eef2f7;
+      border-radius: 40px;
+      padding: 0.2rem 1rem 0.2rem 0.8rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid #e0e6ef;
+    }
+    .user-badge i { color: #5f6c86; }
+    #userDisplayName { font-weight: 500; }
+    #userDisplayId { font-family: monospace; color: #5d6f88; font-size: 0.75rem; cursor: pointer; }
+
+    .peer-id-display {
+      display: flex;
+      align-items: center;
+      background: #f5f7fb;
+      border-radius: 40px;
+      padding: 0.2rem 0.2rem 0.2rem 1rem;
+      border: 1px solid #e0e8f2;
+      max-width: 200px;
+    }
+    #peerIdLabel {
+      font-family: 'SF Mono', monospace;
+      font-size: 0.9rem;
+      color: #2e3b4e;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
+      display: inline-block;
+    }
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: #5d6f88;
+      font-size: 1.2rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: #e2e8f2; }
+
+    .connect-section {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e5e9f0;
+      border-radius: 40px;
+      padding: 0.15rem 0.15rem 0.15rem 1rem;
+      min-width: 240px;
+      flex: 1 1 260px;
+    }
+    .connect-section input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 0.6rem 0;
+      font-size: 0.95rem;
+      min-width: 100px;
+    }
+    .connect-section input:focus { outline: none; }
+    .connect-section button {
+      background: #ffffff;
+      border: 1px solid #d0d9e6;
+      border-radius: 40px;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 470;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .connect-section button:hover { background: #f0f5fd; }
+
+    .connection-status {
+      font-size: 0.85rem;
+      color: #6f7c93;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    /* ========== CHAT MODAL – FULLY RESPONSIVE (mobile/tablet/laptop) ========== */
+    .chat-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+    .chat-modal-overlay.active {
+      display: flex;
+    }
+    .chat-modal {
+      background: white;
+      border-radius: 32px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      animation: modalFadeIn 0.2s ease-out;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    @keyframes modalFadeIn {
+      0% { opacity: 0.5; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Mobile: full-screen modal */
+    @media (max-width: 600px) {
+      .chat-modal {
+        width: 100vw;
+        max-width: none;
+        max-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+      }
+    }
+
+    /* Tablet: larger card with comfortable width */
+    @media (min-width: 601px) and (max-width: 1024px) {
+      .chat-modal {
+        width: 85%;
+        max-width: 700px;
+        max-height: 85vh;
+        border-radius: 36px;
+      }
+      .chat-modal-header h3 {
+        font-size: 1.4rem;
+      }
+      .messages-container {
+        padding: 1.5rem 1.8rem;
+      }
+      .message-bubble {
+        max-width: 75%;
+        font-size: 1rem;
+      }
+    }
+
+    /* Laptop / Desktop: spacious modal, perfect for widescreen */
+    @media (min-width: 1025px) {
+      .chat-modal {
+        width: 75%;
+        max-width: 950px;
+        max-height: 85vh;
+        border-radius: 40px;
+      }
+      .chat-modal-header {
+        padding: 1.2rem 2rem;
+      }
+      .chat-modal-header h3 {
+        font-size: 1.6rem;
+      }
+      .messages-container {
+        padding: 1.8rem 2rem;
+      }
+      .message-bubble {
+        max-width: 68%;
+        font-size: 1rem;
+      }
+      .input-bar {
+        padding: 0.9rem 2rem 1.2rem;
+        gap: 1rem;
+      }
+      #messageInput {
+        font-size: 1rem;
+        padding: 0.9rem 1.5rem;
+      }
+    }
+
+    .chat-modal-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #edf2f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .chat-modal-header h3 {
+      font-weight: 500;
+      font-size: 1.3rem;
+      color: #1e2b3c;
+    }
+    .close-modal-btn {
+      background: transparent;
+      border: none;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      color: #7b8ba3;
+      transition: color 0.1s;
+    }
+    .close-modal-btn:hover { color: #1e2b3c; }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.2rem 1.5rem;
+      background: #fafcff;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      scrollbar-width: thin;
+    }
+    .message-wrapper {
+      display: flex;
+      width: 100%;
+      animation: messageAppear 0.25s ease-out;
+    }
+    .message-wrapper.me { justify-content: flex-end; }
+    .message-wrapper.other { justify-content: flex-start; }
+
+    .message-bubble {
+      max-width: 78%;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 0.75rem 1rem 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      word-wrap: break-word;
+      position: relative;
+    }
+    .me .message-bubble {
+      background: #0084ff;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .other .message-bubble {
+      background: #f0f3f8;
+      border-bottom-left-radius: 4px;
+    }
+
+    .bubble-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .message-text {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #181822;
+      white-space: pre-wrap;
+    }
+    .me .message-text { color: #ffffff; }
+
+    .message-image {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 16px;
+      margin-bottom: 0.3rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      object-fit: contain;
+    }
+    .timestamp {
+      font-size: 0.7rem;
+      margin-top: 0.1rem;
+      text-align: right;
+    }
+    .me .timestamp { color: rgba(255,255,255,0.85); }
+    .other .timestamp { color: #949eb3; }
+
+    @media (max-width: 500px) {
+      .message-bubble { max-width: 85%; }
+    }
+
+    .input-bar {
+      flex-shrink: 0;
+      background: #ffffff;
+      border-top: 1px solid #edf0f5;
+      padding: 0.7rem 1.5rem 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .attach-btn, .send-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.8rem;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      color: #4a5165;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+    }
+    .attach-btn:hover, .send-btn:hover { background: #eef2f7; }
+    #messageInput {
+      flex: 1;
+      border: none;
+      background: #f2f5fa;
+      border-radius: 30px;
+      padding: 0.85rem 1.4rem;
+      font-size: 1rem;
+    }
+    #messageInput:focus { outline: none; background: #e9eef6; }
+    #imageUpload { display: none; }
+
+    /* lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 20, 26, 0.94);
+      justify-content: center;
+      align-items: center;
+      z-index: 4000;
+      backdrop-filter: blur(5px);
+    }
+    .lightbox.active { display: flex; }
+    .lightbox img {
+      max-width: 92vw;
+      max-height: 88vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 16px; right: 20px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 3rem;
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    .lightbox-close:hover { opacity: 1; }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: #2b3b4e;
+      color: white;
+      padding: 0.75rem 1.8rem;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+      z-index: 5000;
+      opacity: 0;
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+
+    /* modals */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(3px);
+    }
+    .modal.active { display: flex; }
+    .modal-card {
+      background: white;
+      border-radius: 32px;
+      padding: 2rem 1.8rem;
+      max-width: 380px;
+      width: 90%;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeScale 0.2s ease-out;
+    }
+    .modal-card p {
+      text-align: left;
+      margin-left: 20px;
+    }
+    @keyframes fadeScale {
+      0% { opacity: 0.4; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .modal-card h2 { font-weight: 450; margin-bottom: 0.8rem; color: #1e2b3c; }
+    .modal-card input {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid #dde3ec;
+      border-radius: 40px;
+      font-size: 1rem;
+      margin: 0.5rem 0;
+    }
+    .modal-card input:focus { outline: none; border-color: #a0b3cf; }
+    .modal-btn {
+      background: #1e2b3c;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.9rem 2rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.8rem;
+    }
+    .modal-btn:hover { background: #2c3d55; }
+    .modal-error { color: #c54c4c; font-size: 0.85rem; min-height: 1.6rem; }
+    .cancel-link {
+      background: transparent;
+      color: #4a5165;
+      margin-top: 0.8rem;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline dotted;
+      font-size: 0.9rem;
+    }
+
+    /* ========== RESPONSIVE LAYOUT (sidebar stacking) ========== */
+    @media (max-width: 768px) {
+      .modal-card p {
+        font-size: 15px;
+      }
+      .chat {
+        flex-direction: column;
+        height: 100dvh;
+      }
+      .friends-panel {
+        width: 100%;
+        flex: 1 1 auto;
+        border-right: none;
+        border-bottom: 1px solid #e6ecf5;
+        overflow-y: auto;
+      }
+      .main-panel {
+        flex: 0 0 auto;
+        width: 100%;
+      }
+      .recent-list {
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .chat {
+        flex-direction: row;
+        height: 100dvh;
+      }
+      .friends-panel {
+        width: 250px;
+        flex: 1 1 auto;
+        overflow-y: auto;
+      }
+      .main-panel {
+        flex: 1;
+      }
+    }
+
+    @media (min-width: 1025px) {
+      .chat {
+        flex-direction: row;
+      }
+      .friends-panel {
+        width: 300px;
+      }
+      .main-panel {
+        flex: 1;
+      }
+    }
+    
+    .header-title img {
+  width: 55px;      /* adjust size */
+  height: 55px;
+  object-fit: cover;
+}
+</style>
+
+</head>  
+<body>  
+  <!-- ================================================================  
+       KEY CHANGE: Both panels now inside .chat → proper flex row/column  
+       Desktop: friends (300px) | main header  
+       Mobile: friends (top) | header (bottom)  
+       ================================================================ -->  
+  <div class="chat">  
+        <!-- RIGHT PANEL: global header only -->  
+    <div class="main-panel">  
+      <div class="chat-header">  
+        <span class="header-title"><img src="/static/icons/icon-512.png"></span>  
+        <div class="user-badge">  
+          <i class="far fa-user-circle"></i>  
+          <span id="userDisplayName">...</span>  
+          <span id="userDisplayId">logout</span>  
+        </div>  
+        <div class="peer-id-display" title="your full peer ID on hover">  
+          <span id="peerIdLabel">loading…</span>  
+          <button class="copy-btn" id="copyPeerIdBtn" title="copy ID"><i class="far fa-copy"></i></button>  
+        </div>  
+        <div class="connect-section">  
+          <input type="text" id="remotePeerId" placeholder="friend&#39;s PeerID">  
+          <button id="connectBtn"><i class="fas fa-plug"></i> connect</button>  
+        </div>  
+        <span class="connection-status" id="connectionStatus"><i class="far fa-circle" style="color: red;"></i> disconnected</span>  
+      </div>  
+    </div>  <!-- LEFT PANEL: friends -->  
+<div class="friends-panel">  
+  <div class="friends-header">  
+    <h3><i class="far fa-address-book"></i> friends</h3>  
+    <button class="add-friend-btn" id="showAddFriendModal"><i class="fas fa-plus-circle"></i> add</button>  
+  </div>  
+
+  <div class="recent-inside">  
+    <div class="recent-header"><i class="far fa-clock"></i> recent</div>  
+    <div class="recent-list" id="recentList"></div>  
+  </div>  
+
+  <div class="friend-list-vertical" id="friendListVertical">  
+    <!-- dynamic friend rows -->  
+  </div>  
+</div>
+
+  </div>    
+  
+  <!-- CHAT MODAL (Telegram-style overlay) -->
+  <div class="chat-modal-overlay" id="chatModalOverlay">  
+    <div class="chat-modal" id="chatModal">  
+      <div class="chat-modal-header">  
+        <h3 id="chatFriendName">Chat</h3>  
+        <button class="close-modal-btn" id="closeChatModal"><i class="fas fa-times"></i></button>  
+      </div>  
+      <div class="messages-container" id="messageContainer"></div>  
+      <div class="input-bar">  
+        <input type="file" id="imageUpload" accept="image/*">  
+        <button class="attach-btn" id="attachImageBtn"><i class="far fa-image"></i></button>  
+        <input type="text" id="messageInput" placeholder="type a message">  
+        <button class="send-btn" id="sendMessageBtn"><i class="far fa-paper-plane"></i></button>  
+      </div>  
+    </div>  
+  </div>  
+  
+  <!-- toast -->  
+  <div id="toast" class="toast"><i class="far fa-info-circle"></i> <span id="toastMsg"></span></div>    <!-- lightbox -->    <div class="lightbox" id="lightbox">  
+    <button class="lightbox-close" id="lightboxClose">&times;</button>  
+    <img id="lightboxImg" src="" alt="">  
+  </div>    
+  
+  <!-- MODALS: registration / add friend / confirm remove -->    
+  
+  <div class="modal" id="registerModal">  
+    <div class="modal-card">  
+      <h2><i class="far fa-hand-peace"></i> welcome</h2>  
+      <p style="color:#6f7c93;">enter username</p>  
+      <input type="text" id="regUsername" placeholder="username" autocomplete="off">  
+      <p style="color:#6f7c93;">enter password</p>  
+      <input type="text" id="regPassword" placeholder="password" autocomplete="on">  
+      <div class="modal-error" id="regError"></div>  
+      <button class="modal-btn" id="registerBtn">start chatting</button>  
+    </div>  
+  </div>    
+  
+  <div class="modal" id="addFriendModal">  
+    <div class="modal-card">  
+      <h2><i class="fas fa-user-plus"></i> add friend</h2>  
+      <input type="text" id="friendIdInput" placeholder="friend&#39;s PeerID (e.g. abc123)">  
+      <input type="text" id="friendNameInput" placeholder="display name" disabled>  
+      <div class="modal-error" id="friendError"></div>  
+      <button class="modal-btn" id="saveFriendBtn">Add to list</button>  
+      <button class="cancel-link" id="closeAddFriendModal">cancel</button>  
+    </div>  
+  </div>    
+  
+  <div class="modal" id="confirmRemoveModal">  
+    <div class="modal-card">  
+      <h2><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> remove friend</h2>  
+      <p style="margin: 1rem 0;">Are you sure you want to remove <span id="removeFriendName"></span> from your list?</p>  
+      <div class="modal-error" id="removeError"></div>  
+      <button class="modal-btn" id="confirmRemoveBtn" style="background:#b44;">yes, remove</button>  
+      <button class="cancel-link" id="cancelRemoveBtn">cancel</button>  
+    </div>  
+  </div>
+  
+  <!--<script src="../static/helper.js"></script>-->
+  <script src="/static/helper.js"></script>
+  <script>
+    const client = new LynkClient((location.protocol === "https:" ? "wss://" : "ws://") + location.host);
+    
+    const registerModal = document.getElementById('registerModal');
+    const registerBtn = document.getElementById('registerBtn');
+    const regError = document.getElementById('regError');
+    
+    const toastEl = document.getElementById('toast');  
+    const toastMsg = document.getElementById('toastMsg');
+    
+    const userDisplayName = document.getElementById('userDisplayName');
+    
+    const peerIdLabel = document.getElementById('peerIdLabel');
+    
+    const container = document.getElementById('friendListVertical');
+    const connectionStatus = document.getElementById('connectionStatus');
+    
+    const messageContainer = document.getElementById('messageContainer');
+    
+    const recentList = document.getElementById('recentList');
+    const closeAddFriendModal = document.getElementById('closeAddFriendModal');
+    
+    const addFriendModal = document.getElementById('addFriendModal');
+    const showAddFriendModal = document.getElementById('showAddFriendModal');
+    
+    const saveFriendBtn = document.getElementById('saveFriendBtn');
+    const friendNameInput = document.getElementById('friendNameInput');
+    
+    const logoutBtn = document.getElementById('userDisplayId');
+    
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    const connectBtn = document.getElementById('connectBtn');
+    
+    const chatModalOverlay = document.getElementById('chatModalOverlay');
+    
+    const closeChatModal = document.getElementById('closeChatModal');
+    
+    const chatFriendNameSpan = document.getElementById('chatFriendName');
+    
+    let isConnected = false;
+    let reconnecting = false;
+    
+    let isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    
+    let user_data = safeParse(localStorage.getItem("user_data"), {});
+    
+    let friend_list = safeParse(localStorage.getItem("friend_list"), []);
+    
+    let recent_chat = safeParse(localStorage.getItem("recent_chat"), []);
+    
+    let messages = safeParse(localStorage.getItem("messages"), {});
+    
+    const copyBtn = document.getElementById('copyPeerIdBtn');
+    
+    let current_chat_room = "";
+    
+   if(!isLoggedIn) {
+     init_client();
+     showRegisterModal(registerModal);
+   }else{
+     init_client();
+     renderFriendList(container);
+     renderUserData(user_data);
+     renderRecent(recentList);
+   }
+   
+   
+  copyBtn.addEventListener('click', () => {
+    //alert("hi");
+  const text = peerIdLabel.textContent;
+  console.log(text);
+
+  if (!text) {
+    console.log("No peerId to copy");
+    return;
+  }
+
+  // Try modern API first
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showCopied())
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+});
+
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+
+  // IMPORTANT for mobile
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "0";
+  textarea.style.width = "1px";
+  textarea.style.height = "1px";
+  textarea.style.opacity = "0";
+
+  document.body.appendChild(textarea);
+
+  textarea.focus();   // 🔥 REQUIRED
+  textarea.select();  // 🔥 REQUIRED
+
+  try {
+    const success = document.execCommand("copy");
+    console.log("Fallback copy success:", success);
+  } catch (err) {
+    console.log("Fallback failed:", err);
+  }
+
+  document.body.removeChild(textarea);
+  showCopied();
+}
+
+function showCopied() {
+  copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+  setTimeout(() => {
+    copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+  }, 1500);
+}
+      
+   registerBtn.addEventListener('click', ()=>{
+     const password = document.getElementById('regPassword').value.trim();
+     const username = document.getElementById('regUsername').value.trim();
+     
+     if(!password){
+       showError(regError, "password is required", "red");
+       return;
+     }
+     if(!username){
+       showError(regError, "username is required", "red");
+       return;
+     }
+     
+     registerBtn.disabled = true;
+     registerBtn.textContent = "Validating...";
+     
+     // emit to backend
+     
+     client.emit('addUser', { username, password });
+   });
+  
+  client.on('myFriendsData', (data)=>{
+    localStorage.setItem("friend_list", JSON.stringify(data.myFriendsData));
+    friend_list = data.myFriendsData;
+    renderFriendList(container);
+  });
+  
+  client.on('loginAccessed', (data)=>{
+    if(data && data.userData){
+      localStorage.setItem("user_data", JSON.stringify(data.userData));
+      user_data = data.userData;
+      registerBtn.disabled = false;
+      registerBtn.textContent = "start chatting";
+      localStorage.setItem("isLoggedIn", true);
+      isLoggedIn = true;
+      
+      peerIdLabel.textContent = data.userData.peerid;
+      userDisplayName.textContent = data.userData.username;
+      hideRegisterModal(registerModal);
+      
+      client.emit("myFriends", { user_id: data.userData.userid });
+    }
+  });
+  
+  client.on('loginDenied', (data)=>{
+   if(data){
+     showError(regError, data.msg, "red");
+     registerBtn.disabled = false;
+     registerBtn.textContent = "start chatting";
+   } 
+  });
+  
+  client.on('registerUser', (data)=>{
+    if(data){
+      showError(regError, data.msg, "#2c25e7");
+    }
+  });
+  
+async function init_client() {
+  try {
+    await client.connect();  
+    isConnected = true;  
+  
+    if (isLoggedIn) {  
+      showToast(toastMsg, toastEl, "connected", "fa-circle-check", "fa-solid");
+      connectionStatus.innerHTML = '<i class="fas fa-circle" style="color: green;"></i> connected';
+      const user_id = user_data.userid;
+     client.emit("myFriends", {user_id});
+    } else {  
+      showError(regError, "connected", "green");
+      registerBtn.textContent = "start chatting";  
+      registerBtn.disabled = false;  
+    }  
+  
+  } catch (err) {  
+    console.log(err);  
+    isConnected = false;  
+  
+    if (isLoggedIn) {
+      showToast(toastMsg, toastEl, "connection failed, retrying...", "fa-spinner", "fa-solid");  
+      connectionStatus.innerHTML = '<i class="far fa-circle" style="color: red;"></i> disconnected';
+    } else {  
+      showError(regError, "connecting Failed retrying after 1s", "red"); 
+      registerBtn.disabled = true;  
+      registerBtn.textContent = "connecting wait...";
+    }  
+  }  
+}
+
+//FRIEND LOGIC
+showAddFriendModal.addEventListener('click', (e)=>{
+  addFriendModal.classList.add('active');
+});
+
+closeAddFriendModal.addEventListener('click', () => {
+addFriendModal.classList.remove('active');
+});
+
+addFriendModal.addEventListener("click", (e) => {
+  if (e.target === addFriendModal) {
+    addFriendModal.classList.remove("active");
+  }
+});
+
+saveFriendBtn.addEventListener('click', ()=>{
+  const friendPeerId = document.getElementById('friendIdInput').value.trim();
+  const user_id = user_data.userid;
+  
+  if(!friendPeerId){
+    showToast(toastMsg, toastEl, "PeerId is needed", "fa-triangle-exclamation", "fa-solid");
+    return;
+  }
+  
+  showToast(toastMsg, toastEl, "Validating friends peer id", "fa-bell", "fa-solid");
+  saveFriendBtn.disabled = true;
+  saveFriendBtn.textContent = "Validating...";
+  client.emit('saveFriend', {friendPeerId, user_id});
+});
+
+
+connectBtn.addEventListener('click', ()=>{
+ const friendPeerId = document.getElementById('remotePeerId').value.trim();
+ const user_id = user_data.userid;
+ 
+ console.log(user_id);
+ 
+ if(!friendPeerId){
+   showToast(toastMsg, toastEl, "friend peerid is empty", "fa-triangle-exclamation", "fa-solid");
+ }
+ showToast(toastMsg, toastEl, "Validating friends peer id", "fa-bell", "fa-solid");
+ connectBtn.disabled = true;
+ 
+ client.emit('saveFriend', {friendPeerId, user_id});
+});
+
+client.on('friendSaved', (data)=>{
+ if(data && data.status){
+   const friData = friend_list;
+   
+   friendNameInput.value = data.friendData.username;
+   friData.push(data.friendData);
+   localStorage.setItem("friend_list", JSON.stringify(friData));
+   friend_list = friData;
+   renderFriendList(container);
+   if(saveFriendBtn.disabled === true){
+     saveFriendBtn.disabled = false;
+     saveFriendBtn.textContent = "Add to list";
+   }else if(connectBtn.disabled === true){
+     connectBtn.disabled = false;
+   }
+   showToast(toastMsg, toastEl, `${data.friendData.username} added as friend`, "fa-bell", "fa-solid");
+   
+ }else{
+  if(connectBtn.disabled === true){
+    connectBtn.disabled = false;
+  }else if (saveFriendBtn.disabled === true){
+    saveFriendBtn.disabled = false;
+    saveFriendBtn.textContent = "Add to list";
+  }
+  showToast(toastMsg, toastEl, data.msg, "fa-triangle-exclamation", "fa-solid");
+ }
+});
+
+//LOGOUT LOGIC
+
+logoutBtn.addEventListener('click', ()=>{
+  // Clear everything
+  localStorage.clear();
+  
+  // Reset in-memory data
+  friend_list = [];
+  recent_chat = [];
+  messages = {};
+  user_data = {};
+  
+  // Clear UI
+  container.innerHTML = "";
+  recentList.innerHTML = "";
+  peerIdLabel.textContent = "loading…";
+  userDisplayName.textContent = "...";
+  client.close();
+  // Show login modal
+  showRegisterModal(registerModal);
+});
+
+
+init_client();
+
+setInterval(() => {
+  if (!isConnected && !reconnecting) {
+    reconnecting = true;
+    init_client().finally(() => reconnecting = false);
+  }
+}, 1000);
+
+closeChatModal.addEventListener('click', () => {
+  hideChatModal();
+});
+
+sendMessageBtn.addEventListener('click', ()=>{
+ const content = document.getElementById('messageInput').value.trim();
+ if(!content || !current_chat_room){
+   return;
+ }
+ const sender = user_data.userid;
+ const time = "just now";
+ const type = "text";
+ const room = current_chat_room;
+ handleMessage(sender, type, content, time);
+ client.emit("sendMessage", {sender, type, content, room});
+});
+
+client.on("newMessage", (data)=>{
+  if(data){
+    let messagesStore = safeParse(localStorage.getItem("messages"), {});
+    if (!messagesStore[data.msg_data.room]) messagesStore[data.msg_data.room] = [];
+  
+      messagesStore[data.msg_data.room].push(data.msg_data);
+      // data comes from server with id, time, sender, type, content
+      localStorage.setItem("messages", JSON.stringify(messagesStore));
+      messages = messagesStore;
+      renderMessages(data.msg_data);
+  }
+});
+
+client.on("store_msg", (data)=>{
+  if(data){
+    let messagesStore = safeParse(localStorage.getItem("messages"), {});
+    
+    if (!messagesStore[data.msg_data.room]) messagesStore[data.msg_data.room] = [];
+  
+      messagesStore[data.msg_data.room].push(data.msg_data);
+      // data comes from server with id, time, sender, type, content etc
+      localStorage.setItem("messages", JSON.stringify(messagesStore));
+      messages = messagesStore;
+  }
+})
+        
+  </script>
+  </body>  
+</html>
