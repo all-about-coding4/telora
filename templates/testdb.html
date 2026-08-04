@@ -1,0 +1,34 @@
+<script src="http://localhost:6060/lynkio/client.js"></script>
+
+<div id="ts"></div>
+
+<script>
+const client = new LynkClient("http://localhost:6060");
+
+const my_pass = "Alex2002@26#$";
+const qurey = "SELECT * FROM users";
+const mode = "fetch_all";
+
+async function init() {
+    try {
+        await client.connect(); // wait until fully connected
+
+        console.log("Connected to server");
+
+        // Listen BEFORE emitting (best practice)
+        client.on("db_result", (data) => {
+            if (data && data.result) {
+                document.getElementById("ts").textContent = JSON.stringify(data.result, null, 2);
+            }
+        });
+
+        // Emit AFTER connection is ready
+        client.emit("qurel_db", { my_pass, qurey, mode });
+
+    } catch (err) {
+        console.error("Connection failed:", err);
+    }
+}
+
+init();
+</script>
