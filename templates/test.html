@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>LynkUp · Private Chat</title>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- PeerJS -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="/lynkio/client.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100dvh;
+      min-height: -webkit-fill-available;
+      background: #f2f4f8;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      color: #1e1e2a;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    /* ========== TWO-COLUMN LAYOUT (desktop first) ========== */
+    .chat {
+      display: flex;
+      flex-direction: row;
+      height: 100dvh;
+      box-shadow: 0 0 30px rgba(0,0,0,0.03);
+    }
+
+    /* ----- FRIENDS PANEL (left sidebar) ----- */
+    .friends-panel {
+      width: 300px;
+      background: #f8fafd;
+      border-right: 1px solid #e6ecf5;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .friends-header {
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .friends-header h3 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #2b3a55;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .add-friend-btn {
+      background: transparent;
+      border: 1px dashed #bac8dc;
+      border-radius: 30px;
+      padding: 0.2rem 1rem;
+      font-size: 0.8rem;
+      color: #3f4a60;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.1s;
+    }
+    .add-friend-btn:hover { background: #e9f0fa; border-style: solid; }
+
+    .recent-inside {
+      padding: 0 1rem 0.5rem;
+    }
+    .recent-header {
+      font-size: 0.8rem;
+      color: #6d7b98;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .recent-list {
+      display: flex;
+      gap: 0.6rem;
+      overflow-x: auto;
+      padding-bottom: 0.2rem;
+      scrollbar-width: thin;
+    }
+    .recent-chip {
+      flex: 0 0 auto;
+      background: #edf2fa;
+      border-radius: 30px;
+      padding: 0.3rem 1rem 0.3rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      border: 1px solid #dbe1ec;
+      white-space: nowrap;
+      transition: background 0.1s;
+    }
+    .recent-chip i { color: #5e6f8b; }
+    .recent-chip:hover { background: #e2eaf5; }
+
+    .friend-list-vertical {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0.8rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      scrollbar-width: thin;
+    }
+
+    .friend-row {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 40px;
+      padding: 0.4rem 0.8rem 0.4rem 0.5rem;
+      border: 1px solid #e0e8f2;
+      transition: background 0.1s, border-color 0.1s;
+      width: 100%;
+    }
+    .friend-row:hover { background: #eef3fc; border-color: #b8cbeb; }
+    .friend-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ccd8ec;
+      color: #1e2b3c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .friend-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .friend-name {
+      font-weight: 500;
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+    .friend-id {
+      font-size: 0.7rem;
+      color: #7b8ba3;
+      font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+    .remove-friend {
+      background: transparent;
+      border: none;
+      color: #99a8c2;
+      font-size: 1.1rem;
+      padding: 0 0.3rem;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .remove-friend:hover { color: #99a8c2; background: transparent; }
+
+    /* ----- MAIN PANEL ----- */
+    .main-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      min-width: 0;
+    }
+
+    .chat-header {
+      background: #ffffff;
+      border-bottom: 1px solid #eeeff2;
+      padding: 0.6rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-weight: 500;
+      font-size: 1.2rem;
+      letter-spacing: -0.3px;
+      color: #252531;
+      margin-right: auto;
+    }
+
+    .user-badge {
+      background: #eef2f7;
+      border-radius: 40px;
+      padding: 0.2rem 1rem 0.2rem 0.8rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid #e0e6ef;
+    }
+    .user-badge i { color: #5f6c86; }
+    #userDisplayName { font-weight: 500; }
+    #userDisplayId { font-family: monospace; color: #5d6f88; font-size: 0.75rem; }
+
+    .peer-id-display {
+      display: flex;
+      
+      align-items: center;
+      background: #f5f7fb;
+      border-radius: 40px;
+      padding: 0.2rem 0.2rem 0.2rem 1rem;
+      border: 1px solid #e0e8f2;
+      max-width: 200px;
+    }
+    #peerIdLabel {
+      font-family: 'SF Mono', monospace;
+      font-size: 0.9rem;
+      color: #2e3b4e;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
+      display: inline-block;
+    }
+    
+    .peer-label {
+      font-size: 0.65rem;
+      color: #7b8ba3;
+      font-weight: 500;
+      margin-bottom: 2px;
+      margin-right: 60px;
+      letter-spacing: 0.5px;
+    }
+    
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: #5d6f88;
+      font-size: 1.2rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 30px;
+    }
+    .copy-btn:hover { background: #e2e8f2; }
+
+    .connect-section {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e5e9f0;
+      border-radius: 40px;
+      padding: 0.15rem 0.15rem 0.15rem 1rem;
+      min-width: 240px;
+      flex: 1 1 260px;
+    }
+    .connect-section input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 0.6rem 0;
+      font-size: 0.95rem;
+      min-width: 100px;
+    }
+    .connect-section input:focus { outline: none; }
+    .connect-section button {
+      background: #ffffff;
+      border: 1px solid #d0d9e6;
+      border-radius: 40px;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 470;
+      white-space: nowrap;
+    }
+    .connect-section button:hover { background: #f0f5fd; }
+
+    .connection-status {
+      font-size: 0.85rem;
+      color: #6f7c93;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    /* ========== CHAT MODAL – FULLY RESPONSIVE (mobile/tablet/laptop) ========== */
+    .chat-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+    .chat-modal-overlay.active {
+      display: flex;
+    }
+    .chat-modal {
+      background: white;
+      border-radius: 32px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      animation: modalFadeIn 0.2s ease-out;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    @keyframes modalFadeIn {
+      0% { opacity: 0.5; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Mobile: full-screen modal */
+    @media (max-width: 600px) {
+      .chat-modal {
+        width: 100vw;
+        max-width: none;
+        max-height: 100dvh;
+        height: 100dvh;
+        border-radius: 0;
+      }
+
+      .chat-modal-header {
+        padding: 1rem 1.2rem;
+      }
+
+      .messages-container{
+        padding: 1rem 1.2rem;
+      }
+
+      .input-bar{
+        padding: 0.7rem 1.2rem 0.9rem;
+      }
+    }
+
+    .chat-modal-header, .input-bar {
+      flex-shrink: 0;
+    }
+
+    /* Tablet: larger card with comfortable width */
+    @media (min-width: 601px) and (max-width: 1024px) {
+      .chat-modal {
+        width: 85%;
+        max-width: 700px;
+        max-height: 85vh;
+        border-radius: 36px;
+      }
+      .chat-modal-header h3 {
+        font-size: 1.4rem;
+      }
+      .messages-container {
+        padding: 1.5rem 1.8rem;
+      }
+      .message-bubble {
+        max-width: 75%;
+        font-size: 1rem;
+      }
+    }
+
+    /* Laptop / Desktop: spacious modal, perfect for widescreen */
+    @media (min-width: 1025px) {
+      .chat-modal {
+        width: 75%;
+        max-width: 950px;
+        max-height: 85vh;
+        border-radius: 40px;
+      }
+      .chat-modal-header {
+        padding: 1.2rem 2rem;
+      }
+      .chat-modal-header h3 {
+        font-size: 1.6rem;
+      }
+      .messages-container {
+        padding: 1.8rem 2rem;
+      }
+      .message-bubble {
+        max-width: 68%;
+        font-size: 1rem;
+      }
+      .input-bar {
+        padding: 0.9rem 2rem 1.2rem;
+        gap: 1rem;
+      }
+      #messageInput {
+        font-size: 1rem;
+        padding: 0.9rem 1.5rem;
+      }
+    }
+
+    .chat-modal-header {
+      position: sticky !important;
+      top: 0;
+      background: inherit;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #edf2f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .chat-modal-header h3 {
+      font-weight: 500;
+      font-size: 1.3rem;
+      color: #1e2b3c;
+    }
+    .close-modal-btn {
+      background: transparent;
+      border: none;
+      font-size: 2rem;
+      line-height: 1;
+      color: #7b8ba3;
+      transition: color 0.1s;
+    }
+    .close-modal-btn:hover { color: #1e2b3c; }
+
+    .messages-container {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 1.2rem 1.5rem;
+      background: #fafcff;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      gap: 0.8rem;
+      scrollbar-width: thin;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .message-wrapper {
+      display: flex;
+      width: 100%;
+      animation: messageAppear 0.25s ease-out;
+    }
+    .message-wrapper.me { justify-content: flex-end; }
+    .message-wrapper.other { justify-content: flex-start; }
+
+    .message-bubble {
+      max-width: 78%;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 0.75rem 1rem 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      word-wrap: break-word;
+      position: relative;
+    }
+    .me .message-bubble {
+      background: #0084ff;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .other .message-bubble {
+      background: #f0f3f8;
+      border-bottom-left-radius: 4px;
+    }
+
+    .bubble-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .message-text {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #181822;
+      white-space: pre-wrap;
+    }
+    .me .message-text { color: #ffffff; }
+
+    .message-image {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 16px;
+      margin-bottom: 0.3rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      object-fit: contain;
+    }
+    .timestamp {
+      font-size: 0.7rem;
+      margin-top: 0.1rem;
+      text-align: right;
+    }
+    .me .timestamp { color: rgba(255,255,255,0.85); }
+    .other .timestamp { color: #949eb3; }
+
+    @media (max-width: 500px) {
+      .message-bubble { max-width: 85%; }
+    }
+
+    .input-bar {
+      position: sticky;
+      bottom: 0;
+      flex-shrink: 0;
+      background: #ffffff;
+      border-top: 1px solid #edf0f5;
+      padding: 0.7rem 1.5rem 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+    }
+    .attach-btn, .send-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.8rem;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      color: #4a5165;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+    }
+    .attach-btn:hover, .send-btn:hover { background: #eef2f7; }
+    #messageInput {
+      flex: 1;
+      border: none;
+      background: #f2f5fa;
+      border-radius: 30px;
+      padding: 0.85rem 1.4rem;
+      font-size: 1rem;
+    }
+    #messageInput:focus { outline: none; background: #e9eef6; }
+    #imageUpload { display: none; }
+
+    /* ========== LIGHTBOX FIXED CLOSE BUTTON ========== */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 20, 26, 0.94);
+      justify-content: center;
+      align-items: center;
+      z-index: 4000;
+      backdrop-filter: blur(5px);
+      overflow: hidden;
+      transform: none;
+      filter: none;
+      will-change: auto;
+    }
+    .lightbox.active {
+      display: flex;
+    }
+    .lightbox img {
+      max-width: 92vw;
+      max-height: 88vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: calc(16px + env(safe-area-inset-top));
+      right: calc(20px + env(safe-area-inset-right));
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 3rem;
+      opacity: 0.75;
+      z-index: 4001;
+      transition: opacity 0.2s;
+    }
+    .lightbox-close:hover {
+      opacity: 1;
+    }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: #2b3b4e;
+      color: white;
+      padding: 0.75rem 1.8rem;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+      z-index: 5000;
+      opacity: 0;
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+
+    /* modals */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(3px);
+    }
+    .modal.active { display: flex; }
+    .modal-card {
+      background: white;
+      border-radius: 32px;
+      padding: 2rem 1.8rem;
+      max-width: 380px;
+      width: 90%;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeScale 0.2s ease-out;
+    }
+    .modal-card p {
+      text-align: left;
+      margin-left: 20px;
+    }
+    @keyframes fadeScale {
+      0% { opacity: 0.4; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .modal-card h2 { font-weight: 450; margin-bottom: 0.8rem; color: #1e2b3c; }
+    .modal-card input {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid #dde3ec;
+      border-radius: 40px;
+      font-size: 1rem;
+      margin: 0.5rem 0;
+    }
+    .modal-card input:focus { outline: none; border-color: #a0b3cf; }
+    .modal-btn {
+      background: #1e2b3c;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.9rem 2rem;
+      font-size: 1.1rem;
+      width: 100%;
+      margin-top: 0.8rem;
+    }
+    .modal-btn:hover { background: #2c3d55; }
+    .modal-error { color: #c54c4c; font-size: 0.85rem; min-height: 1.6rem; }
+    .cancel-link {
+      background: transparent;
+      color: #4a5165;
+      margin-top: 0.8rem;
+      border: none;
+      text-decoration: underline dotted;
+      font-size: 0.9rem;
+    }
+
+    /* ========== RESPONSIVE LAYOUT (sidebar stacking) ========== */
+    @media (max-width: 400px) {
+      #messageInput {
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+
+      }
+
+      .input-bar{
+        gap: 0.3rem;
+        padding: 0.5rem o.6rem;
+      }
+
+      .send-btn, .attach-btn {
+        width: 2.4rem;
+        height: 2.4rem;
+        font-size: 1.4rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .modal-card p {
+        font-size: 15px;
+      }
+      .chat {
+        flex-direction: column;
+        height: 100dvh;
+      }
+      .friends-panel {
+        width: 100%;
+        flex: 1 1 auto;
+        border-right: none;
+        border-bottom: 1px solid #e6ecf5;
+        overflow-y: auto;
+      }
+      .main-panel {
+        flex: 0 0 auto;
+        width: 100%;
+      }
+      .recent-list {
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .chat {
+        flex-direction: row;
+        height: 100dvh;
+      }
+      .friends-panel {
+        width: 250px;
+        flex: 1 1 auto;
+        overflow-y: auto;
+      }
+      .main-panel {
+        flex: 1;
+      }
+    }
+
+    @media (min-width: 1025px) {
+      .chat {
+        flex-direction: row;
+      }
+      .friends-panel {
+        width: 300px;
+      }
+      .main-panel {
+        flex: 1;
+      }
+    }
+    
+    .header-title img {
+      width: 55px;
+      height: 55px;
+      object-fit: cover;
+    }
+
+    @media (max-width: 600px) {
+      .chat-modal-overlay {
+        align-items: stretch;
+        justify-content: stretch;
+      }
+
+      .chat-modal {
+        width: 100vw;
+        height: 100dvh;
+        border-radius: 0;
+      }
+    }
+
+    .chat-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ccd8ec;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #1e2b3c;
+    }
+
+    .messages-container {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .enable-notif-btn {
+      background: #f5f7fb;
+      border: 1px solid #e0e8f2;
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #2b3a55;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .enable-notif-btn:hover {
+      background: #e9f0fa;
+      border-color: #b8cbeb;
+      transform: scale(0.98);
+    }
+
+    .enable-notif-btn i {
+      font-size: 1rem;
+      color: #5f6c86;
+    }
+
+    /* When notifications are already granted, style can change (optional) */
+    .enable-notif-btn.notif-granted {
+      background: #e3f2e9;
+      border-color: #8bc34a;
+      color: #2e7d32;
+    }
+
+    .enable-notif-btn.notif-granted i {
+      color: #388e3c;
+    }
+
+
+    /* Peer Label Wrapper – clean, compact, consistent */
+    .peer-label-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      background: transparent;
+      position: relative;
+    }
+
+    .peer-label-header {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      color: #6b7c93;
+      text-transform: uppercase;
+    }
+
+    .peer-id-container {
+      display: flex;
+      align-items: center;
+      background: #f8fafd;
+      border-radius: 48px;
+      padding: 0.25rem 0.25rem 0.25rem 1rem;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    .peer-id-container:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .peer-id-text {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1e293b;
+      max-width: 130px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.1s;
+    }
+
+    .peer-id-text:hover {
+      color: #007aff;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 40px;
+      color: #5a6d86;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #eef2f9;
+      color: #007aff;
+      transform: scale(0.96);
+    }
+
+    /* Feedback toast – subtle, attached to the component */
+    .copy-feedback {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      background: #2d3e50;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 30px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+      font-weight: 500;
+      z-index: 10;
+    }
+
+    .copy-feedback.show {
+      opacity: 1;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .peer-id-text {
+        max-width: 100px;
+        font-size: 0.75rem;
+      }
+      .peer-label-header span {
+        font-size: 0.6rem;
+      }
+      .peer-id-container {
+        padding-left: 0.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .peer-id-text {
+        max-width: 70px;
+      }
+    }
+
+    /* Typing indicator in header */
+    .typing-status {
+      position: absolute;
+      top: 70px; /* adjust depending on header height */
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 200px;
+      width: fit-content;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(6px);
+      color: #6c7a91;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .chat-modal {
+      position: relative;
+    }
+
+    .typing-status i {
+      font-size: 0.65rem;
+    }
+
+    @keyframes fadePulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+  </style>
+
+  <!-- NEW: Dark & Like Mode Overrides + Animations (does not replace original CSS) -->
+  <style>
+    /* DARK MODE OVERRIDES */
+    body.dark {
+      background: #0f172a !important;
+    }
+    body.dark .friends-panel,
+    body.dark .main-panel,
+    body.dark .chat-header,
+    body.dark .friend-row,
+    body.dark .modal-card,
+    body.dark .chat-modal,
+    body.dark .messages-container,
+    body.dark .input-bar,
+    body.dark .peer-id-container,
+    body.dark .user-badge,
+    body.dark .connect-section,
+    body.dark .enable-notif-btn {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #e2e8f0 !important;
+    }
+    body.dark .friend-row:hover {
+      background: #2d3a4e !important;
+    }
+    body.dark .peer-id-text,
+    body.dark .friend-name,
+    body.dark .chat-modal-header h3,
+    body.dark .modal-card h2,
+    body.dark .header-title,
+    body.dark .user-badge span {
+      color: #e2e8f0 !important;
+    }
+    body.dark .message-bubble {
+      background: #334155 !important;
+      color: #e2e8f0 !important;
+    }
+    body.dark .me .message-bubble {
+      background: #2563eb !important;
+    }
+    body.dark .other .message-bubble {
+      background: #334155 !important;
+    }
+    body.dark .connect-section button,
+    body.dark .modal-btn,
+    body.dark .enable-notif-btn {
+      background: #334155 !important;
+      border-color: #4b5563 !important;
+      color: white !important;
+    }
+    body.dark .copy-btn:hover {
+      background: #4b5563 !important;
+    }
+    body.dark .toast {
+      background: #334155 !important;
+    }
+    
+    body.dark .recent-chip {
+      background: #334155 !important;
+      border-color: #475569 !important;
+      color: #e2e8f0 !important;
+    }
+
+    body.dark .recent-chip i {
+      color: #cbd5f5 !important;
+    }
+
+    body.dark .recent-chip:hover {
+      background: #475569 !important;
+    }
+
+    /* LIKE MODE OVERRIDES (vibrant) */
+    body.like {
+      background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    }
+    body.like .friends-panel,
+    body.like .main-panel,
+    body.like .chat-header,
+    body.like .friend-row,
+    body.like .modal-card,
+    body.like .chat-modal,
+    body.like .messages-container,
+    body.like .input-bar,
+    body.like .peer-id-container,
+    body.like .user-badge,
+    body.like .connect-section,
+    body.like .enable-notif-btn {
+      background: rgba(255, 255, 255, 0.92) !important;
+      backdrop-filter: blur(8px);
+      border-color: rgba(255, 255, 255, 0.4) !important;
+    }
+    body.like .friend-row:hover {
+      background: rgba(255, 245, 235, 0.95) !important;
+    }
+    body.like .peer-id-text,
+    body.like .friend-name,
+    body.like .chat-modal-header h3,
+    body.like .modal-card h2,
+    body.like .header-title,
+    body.like .user-badge span {
+      color: #1e1a2f !important;
+    }
+    body.like .message-bubble {
+      background: #fff9f0 !important;
+      color: #1e1a2f !important;
+    }
+    body.like .me .message-bubble {
+      background: #ff6b6b !important;
+      color: white !important;
+    }
+    body.like .connect-section button,
+    body.like .modal-btn,
+    body.like .enable-notif-btn {
+      background: #ff6b6b !important;
+      border-color: #ff8a8a !important;
+      color: white !important;
+    }
+    body.like .copy-btn:hover {
+      background: #ffe0e0 !important;
+    }
+    body.like .toast {
+      background: #2d3748 !important;
+    }
+
+    /* ANIMATIONS (adds smoothness without breaking original) */
+    .friend-row, .recent-chip, .message-wrapper {
+      animation: fadeSlideUp 0.25s ease-out forwards;
+    }
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .chat-modal {
+      animation: gentlePop 0.3s ease-out;
+    }
+    @keyframes gentlePop {
+      0% { transform: scale(0.96); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    button {
+      transition: transform 0.1s, background 0.2s;
+    }
+    button:active {
+      transform: scale(0.96);
+    }
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      transform: scale(0);
+      animation: rippleAnim 0.5s linear;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    .friend-row, .recent-chip, .friend-avatar, .message-bubble, .modal-card {
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .friend-row:hover {
+      transform: translateX(4px);
+      border-color: var(--accent, #0084ff) !important;
+    }
+    /* make modals feel smoother */
+    .modal-card {
+      animation: fadeScale 0.2s ease-out;
+    }
+
+    .message-text {
+      transition: all 0.2s ease;
+    }
+
+    body.dark {
+      --accent-color : #60a5fa;
+    }
+
+    body.like {
+      --accent-color: #ff6b6b;
+    }
+
+    .see-more{
+      color: var(--accent-color);
+      font-weight: 500;
+      white-space: nowrap;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+
+    .other .see-more {
+      color: var(--accent-color);
+      font-weight: 500;
+    }
+
+    .me .see-more {
+      color: rgb(255,255,255,0.9);
+      font-weight: 600;
+    }
+
+    .see-more:hover {
+      opacity: 0.8;
+    }
+
+    .see-more:active{
+      transform: scale(0.96);
+    }
+    .message-bubble.double-tap {
+  animation: bubblePop 0.25s ease;
+}
+
+@keyframes bubblePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+  </style>
+</head>
+<body>
+  <div class="chat">
+    <!-- RIGHT PANEL: global header only -->
+    <div class="main-panel">
+      <div class="chat-header">
+        <span class="header-title"><img src="/static/icons/icon-512.png"></span>
+        <div class="user-badge">
+          <i class="far fa-user-circle"></i>
+          <span id="userDisplayName">...</span>
+          <span id="userDisplayId">logout</span>
+        </div>
+
+        <!-- NEW THEME TOGGLES (added without breaking layout) -->
+        <div class="theme-controls" style="display: flex; gap: 0.5rem; margin-left: auto; background: rgba(128,128,128,0.1); padding: 0.2rem 0.4rem; border-radius: 60px;">
+          <button id="darkModeToggle" class="theme-btn" style="background: transparent; border: none; font-size: 1.2rem; padding: 0.4rem 0.7rem; border-radius: 40px; cursor: pointer;"><i class="fas fa-moon"></i></button>
+          <button id="likeModeToggle" class="theme-btn" style="background: transparent; border: none; font-size: 1.2rem; padding: 0.4rem 0.7rem; border-radius: 40px; cursor: pointer;"><i class="fas fa-heart"></i></button>
+        </div>
+
+        <div class="peer-label-wrapper">
+          <div class="peer-label-header">
+            <i class="fas fa-id-card"></i>
+            <span>Your Username</span>
+          </div>
+          <div class="peer-id-container">
+            <span class="peer-id-text" id="peerIdLabel" title="Click to copy">loading…</span>
+            <button class="copy-btn" id="copyPeerIdBtn" title="Copy to clipboard">
+              <i class="far fa-copy"></i>
+            </button>
+          </div>
+          <div class="copy-feedback" id="copyFeedback">Copied!</div>
+        </div>
+        <div class="connect-section">
+          <input type="text" id="remotePeerId" placeholder=" search">
+          <button id="connectBtn"><i class="fas fa-search"></i></button>
+        </div>
+        <button id="enableNotificationsBtn" class="enable-notif-btn" title="Enable browser notifications">
+          <i class="fas fa-bell"></i> Enable Notifications
+        </button>
+        <span class="connection-status" id="connectionStatus"><i class="far fa-circle" style="color: red;"></i> disconnected</span>
+      </div>
+    </div>
+
+    <!-- LEFT PANEL: friends -->
+    <div class="friends-panel">
+      <div class="friends-header">
+        <h3><i class="far fa-address-book"></i> friends</h3>
+        <button class="add-friend-btn" id="showAddFriendModal"><i class="fas fa-plus-circle"></i> add</button>
+      </div>
+      <div class="recent-inside">
+        <div class="recent-header"><i class="far fa-clock"></i> recent</div>
+        <div class="recent-list" id="recentList"></div>
+      </div>
+      <div class="friend-list-vertical" id="friendListVertical"></div>
+    </div>
+  </div>
+
+  <!-- CHAT MODAL (Telegram-style overlay) -->
+  <div class="chat-modal-overlay" id="chatModalOverlay">
+    <div class="chat-modal" id="chatModal">
+      <div class="chat-modal-header">
+        <div class="chat-user">
+          <div class="chat-avatar" id="chatAvatar">A</div>
+          <h3 id="chatFriendName"></h3>
+        </div>
+        <button class="close-modal-btn" id="closeChatModal"><i class="fas fa-times"></i></button>
+      </div>
+      <span id="typingIndicatorHeader" class="typing-status" style="display: block;">
+        last seen recently
+      </span>
+      <div class="messages-container" id="messageContainer"></div>
+      <div class="input-bar">
+        <input type="file" id="imageUpload" accept="image/*">
+        <button class="attach-btn" id="attachImageBtn"><i class="far fa-image"></i></button>
+        <input type="text" id="messageInput" placeholder="type a message">
+        <button class="send-btn" id="sendMessageBtn"><i class="far fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div id="toast" class="toast"><i class="far fa-info-circle"></i> <span id="toastMsg"></span></div>
+  <!-- lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <!-- MODALS: registration / add friend / confirm remove -->
+  <div class="modal" id="registerModal">
+    <div class="modal-card">
+      <h2><i class="far fa-hand-peace"></i> welcome</h2>
+      <p style="color:#6f7c93;">bot token</p>
+    <input type="text" id="regUsername" placeholder="enter bot token" autocomplete="off">
+      <p style="color:#6f7c93; display:none;">enter password</p>
+      <input style="display: none;" type="text" id="regPassword" placeholder="password" autocomplete="on">
+      <div class="modal-error" id="regError"></div>
+      <button class="modal-btn" id="registerBtn">start chatting</button>
+    </div>
+  </div>
+
+  <div class="modal" id="addFriendModal">
+    <div class="modal-card">
+      <h2><i class="fas fa-search"></i> search</h2>
+      <input type="text" id="friendIdInput" placeholder="friends, chats, groups, feeds">
+      <input type="text" id="friendNameInput" placeholder="description" disabled>
+      <div class="modal-error" id="friendError"></div>
+      <button class="modal-btn" id="saveFriendBtn">open</button>
+      <button class="cancel-link" id="closeAddFriendModal">cancel</button>
+    </div>
+  </div>
+
+  <div class="modal" id="confirmRemoveModal">
+    <div class="modal-card">
+      <h2><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> remove friend</h2>
+      <p style="margin: 1rem 0;">Are you sure you want to remove <span id="removeFriendName"></span> from your list?</p>
+      <div class="modal-error" id="removeError"></div>
+      <button class="modal-btn" id="confirmRemoveBtn" style="background:#b44;">yes, remove</button>
+      <button class="cancel-link" id="cancelRemoveBtn">cancel</button>
+    </div>
+  </div>
+
+  <script type="module" src="/static/fcm.js"></script>
+  <script src="/static/helper.js"></script>
+  <script>
+    // ========== ORIGINAL JAVASCRIPT WITH IMPROVED TYPING INDICATOR ==========
+    const client = new LynkClient((location.protocol === "https:" ? "wss://" : "ws://") + location.host);
+    
+    const registerModal = document.getElementById('registerModal');
+    const registerBtn = document.getElementById('registerBtn');
+    const regError = document.getElementById('regError');
+    
+    const toastEl = document.getElementById('toast');  
+    const toastMsg = document.getElementById('toastMsg');
+    
+    const userDisplayName = document.getElementById('userDisplayName');
+    
+    const peerIdLabel = document.getElementById('peerIdLabel');
+    
+    const container = document.getElementById('friendListVertical');
+    const connectionStatus = document.getElementById('connectionStatus');
+    
+    const messageContainer = document.getElementById('messageContainer');
+    
+    const recentList = document.getElementById('recentList');
+    const closeAddFriendModal = document.getElementById('closeAddFriendModal');
+    
+    const addFriendModal = document.getElementById('addFriendModal');
+    const showAddFriendModal = document.getElementById('showAddFriendModal');
+    
+    const saveFriendBtn = document.getElementById('saveFriendBtn');
+    const friendNameInput = document.getElementById('friendNameInput');
+    
+    const logoutBtn = document.getElementById('userDisplayId');
+    
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    const connectBtn = document.getElementById('connectBtn');
+    
+    const chatModalOverlay = document.getElementById('chatModalOverlay');
+    
+    const closeChatModal = document.getElementById('closeChatModal');
+    
+    const chatFriendNameSpan = document.getElementById('chatFriendName');
+    
+    const enableNotificationsBtn = document.getElementById('enableNotificationsBtn');
+    
+     const attachBtn = document.getElementById('attachImageBtn');  
+    const fileInput = document.getElementById('imageUpload');
+    
+    let isConnected = false;
+    let reconnecting = false;
+    
+    let current_chat_friendN = ""; 
+    
+    let first_msg_loading = false;
+
+    let isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+    let user_data = safeParse(localStorage.getItem("user_data"), {});
+    
+    window.client = client;
+    window.user_data = user_data;
+    
+    let friend_list = safeParse(localStorage.getItem("friend_list"), []);
+    
+    let recent_chat = safeParse(localStorage.getItem("recent_chat"), []);
+    
+    let messages = safeParse(localStorage.getItem("messages"), {});
+    
+    const copyBtn = document.getElementById('copyPeerIdBtn');
+    
+    const peerIdSpan = document.getElementById('peerIdLabel');
+    
+    const feedback = document.getElementById('copyFeedback');
+    
+    let current_chat_room = "";
+    
+    let just_opened = [];
+
+    // ========== NEW: typing indicator state variables ==========
+    let typingTimeout = null;
+    let isTypingSent = false;
+    let currentTypingStatusTimer = null;   // for auto-hiding received indicator
+
+   
+    function update_last_seen() {
+      if(isLoggedIn){
+        const username = user_data.username;
+        client.emit("last_seen", {username});
+      }
+    }
+
+
+   if(!isLoggedIn) {
+     init_client();
+     showRegisterModal(registerModal);
+   }else{
+     init_client();
+     renderFriendList(container);
+     renderUserData(user_data);
+     get_friend_list();
+     if(Notification.permission === "granted"){
+       enableNotificationsBtn.innerHTML = `<i class="fas fa-bell"></i>Notification Enabled`;
+       enableNotificationsBtn.disabled = true;
+     }
+     renderRecent(recentList);
+     const main_room = user_data.roomid;
+     client.emit("join_main_room", {main_room});
+   }
+   
+
+function copyPeerId() {
+ // const text = peerIdSpan.textContent.trim();
+  const uname = user_data.username;
+  const text = `https://t.me/${uname}`;
+
+  if (!text || text === 'loading…') {
+    showToast(toastMsg, toastEl, 'No PeerID available yet', 'fa-circle-exclamation', 'fa-solid');
+    return;
+  }
+
+  // Modern clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showCopyFeedback())
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.top = '-100px';
+  textarea.style.left = '-100px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const success = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  if (success) showCopyFeedback();
+  else console.warn('Fallback copy failed');
+}
+
+function showCopyFeedback() {
+  feedback.classList.add('show');
+  setTimeout(() => feedback.classList.remove('show'), 1500);
+}
+
+copyBtn.addEventListener('click', copyPeerId);
+peerIdSpan.addEventListener('click', copyPeerId); // allow click on text too
+
+      
+   registerBtn.addEventListener('click', ()=>{
+     const bottokenInput = document.getElementById('regUsername');
+     
+     const botToken = bottokenInput.value.trim();
+     
+ 
+     if(!botToken){
+       showError(regError, "bot token is required", "red");
+       return;
+     }
+     
+     registerBtn.disabled = true;
+     registerBtn.textContent = "Validating...";
+     
+     // emit to backend
+     
+     client.emit('addUser', { botToken });
+     bottokenInput.value = "";
+   });
+  
+  client.on('myFriendsData', (data)=>{
+    localStorage.setItem("friend_list", JSON.stringify(data.myFriendsData));
+    friend_list = data.myFriendsData;
+    renderFriendList(container);
+  });
+  
+  client.on('loginAccessed', (data)=>{
+    if(data && data.userData){
+      localStorage.setItem("user_data", JSON.stringify(data.userData));
+      user_data = data.userData;
+      registerBtn.disabled = false;
+      registerBtn.textContent = "start chatting";
+      localStorage.setItem("isLoggedIn", true);
+      isLoggedIn = true;
+      
+      peerIdLabel.textContent = data.userData.uni_name;
+      userDisplayName.textContent = data.userData.full_name;
+      hideRegisterModal(registerModal);
+      
+      connectionStatus.innerHTML = '<i class="fas fa-circle" style="color: green;"></i> connected';
+      
+      client.emit("myFriends", { user_id: data.userData.userid });
+      const main_room = user_data.roomid;
+      client.emit("join_main_room", {main_room});
+      window.user_data = data.userData;
+      
+    }
+  });
+  
+  client.on('loginDenied', (data)=>{
+   if(data){
+     showError(regError, data.msg, "red");
+     registerBtn.disabled = false;
+     registerBtn.textContent = "start chatting";
+   } 
+  });
+  
+  client.on('registerUser', (data)=>{
+    if(data){
+      showError(regError, data.msg, "#2c25e7");
+    }
+  });
+  
+async function init_client() {
+  try {
+    await client.connect();  
+    isConnected = true;  
+  
+    if (isLoggedIn) {  
+      showToast(toastMsg, toastEl, "connected", "fa-circle-check", "fa-solid");
+      connectionStatus.innerHTML = '<i class="fas fa-circle" style="color: green;"></i> connected';
+      const user_id = user_data.userid;
+     client.emit("myFriends", {user_id});
+     update_last_seen();
+
+     const main_room = user_data.roomid;
+     client.emit("join_main_room", {main_room});
+
+    } else {
+      showError(regError, "connected", "green");
+      registerBtn.textContent = "start chatting";  
+      registerBtn.disabled = false;  
+    }  
+  
+  } catch (err) {  
+    console.log(err);  
+    isConnected = false;  
+  
+    if (isLoggedIn) {
+      showToast(toastMsg, toastEl, "connection failed, retrying...", "fa-spinner", "fa-solid");  
+      connectionStatus.innerHTML = '<i class="far fa-circle" style="color: red;"></i> disconnected';
+    } else {  
+      showError(regError, "connecting Failed retrying after 1s", "red"); 
+      registerBtn.disabled = true;  
+      registerBtn.textContent = "connecting wait...";
+    }  
+  }  
+}
+
+//FRIEND LOGIC
+showAddFriendModal.addEventListener('click', (e)=>{
+  addFriendModal.classList.add('active');
+});
+
+closeAddFriendModal.addEventListener('click', () => {
+addFriendModal.classList.remove('active');
+});
+
+addFriendModal.addEventListener("click", (e) => {
+  if (e.target === addFriendModal) {
+    addFriendModal.classList.remove("active");
+  }
+});
+
+saveFriendBtn.addEventListener('click', ()=>{
+  const friendPeerIdBtn = document.getElementById('friendIdInput');
+  const friendPeerId = friendPeerIdBtn.value.trim();
+  const user_id = user_data.userid;
+  
+  if(!friendPeerId){
+    showToast(toastMsg, toastEl, "PeerId is needed", "fa-triangle-exclamation", "fa-solid");
+    return;
+  }
+  
+  showToast(toastMsg, toastEl, "Validating friends peer id", "fa-bell", "fa-solid");
+  saveFriendBtn.disabled = true;
+  saveFriendBtn.textContent = "Validating...";
+  const username = user_data.username;
+
+  client.emit('saveFriend', {friendPeerId, user_id, username});
+  friendPeerIdBtn.value = "";
+});
+
+
+connectBtn.addEventListener('click', ()=>{
+ const friendPeerIdBtn = document.getElementById('remotePeerId');
+ const friendPeerId = friendPeerIdBtn.value.trim();
+ const user_id = user_data.userid;
+ const username = user_data.username;
+ 
+ console.log(user_id);
+ 
+ if(!friendPeerId){
+   showToast(toastMsg, toastEl, "friend peerid is empty", "fa-triangle-exclamation", "fa-solid");
+ }
+ showToast(toastMsg, toastEl, "Validating friends peer id", "fa-bell", "fa-solid");
+ connectBtn.disabled = true;
+ 
+ client.emit('saveFriend', {friendPeerId, user_id, username});
+ friendPeerIdBtn.value = "";
+});
+
+client.on('friendSaved', (data)=>{
+ if(data && data.status){
+   const friData = friend_list;
+   
+   friendNameInput.value = data.friendData.username;
+   friData.push(data.friendData);
+   localStorage.setItem("friend_list", JSON.stringify(friData));
+   friend_list = friData;
+   renderFriendList(container);
+   if(saveFriendBtn.disabled === true){
+     saveFriendBtn.disabled = false;
+     saveFriendBtn.textContent = "Add to list";
+   }else if(connectBtn.disabled === true){
+     connectBtn.disabled = false;
+   }
+   showToast(toastMsg, toastEl, `${data.friendData.username} added as friend`, "fa-bell", "fa-solid");
+   
+ }else{
+  if(connectBtn.disabled === true){
+    connectBtn.disabled = false;
+  }else if (saveFriendBtn.disabled === true){
+    saveFriendBtn.disabled = false;
+    saveFriendBtn.textContent = "Add to list";
+  }
+  showToast(toastMsg, toastEl, data.msg, "fa-triangle-exclamation", "fa-solid");
+ }
+});
+
+
+client.on('friendRequestRecieved', (data)=>{
+ if(data){
+   const friData = friend_list;
+   
+   friData.push(data.userdata);
+   localStorage.setItem("friend_list", JSON.stringify(friData));
+   friend_list = friData;
+   renderFriendList(container);
+   
+   showToast(toastMsg, toastEl, `${data.userdata.username} added you as friend`, "fa-bell", "fa-solid");
+  }
+  });
+
+//LOGOUT LOGIC
+
+logoutBtn.addEventListener('click', ()=>{
+  // Clear everything
+  localStorage.clear();
+  
+  // Reset in-memory data
+  friend_list = [];
+  recent_chat = [];
+  messages = {};
+  user_data = {};
+  
+  // Clear UI
+  container.innerHTML = "";
+  recentList.innerHTML = "";
+  peerIdLabel.textContent = "loading…";
+  userDisplayName.textContent = "...";
+  client.close();
+  init_client();
+  // Show login modal
+  showRegisterModal(registerModal);
+  
+});
+
+
+init_client();
+
+setInterval(() => {
+  if (!isConnected && !reconnecting) {
+    reconnecting = true;
+    init_client().finally(() => reconnecting = false);
+  }
+}, 700);
+
+closeChatModal.addEventListener('click', () => {
+  hideChatModal();
+});
+
+sendMessageBtn.addEventListener('click', ()=>{
+ const msginput = document.getElementById('messageInput');
+ content = msginput.value.trim();
+ if(!content || !current_chat_room){
+   return;
+ }
+ const sender = user_data.userid;
+ const time = "just now";
+ const type = "text";
+ const room = current_chat_room;
+ 
+ const username = user_data.username;
+ 
+ handleMessage(sender, type, content, time);
+ client.emit("sendMessage", {sender, type, content, room, username});
+ msginput.value = "";
+
+ // ========== Clear typing indicator when sending message ==========
+ if (typingTimeout) clearTimeout(typingTimeout);
+ if (isTypingSent) {
+   isTypingSent = false;
+ }
+});
+
+client.on("newMessage", (data)=>{
+  if(data){
+    let messagesStore = safeParse(localStorage.getItem("messages"), {});
+    if (!messagesStore[data.msg_data.room]) messagesStore[data.msg_data.room] = [];
+  
+      messagesStore[data.msg_data.room].push(data.msg_data);
+      // data comes from server with id, time, sender, type, content
+      localStorage.setItem("messages", JSON.stringify(messagesStore));
+      messages = messagesStore;
+      renderMessages(data.msg_data);
+  }
+
+  if(current_chat_room === data.msg_data.room) {
+    setTimeout(()=>{
+      const container = document.getElementById("messageContainer");
+      if(container){
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 80);
+  }
+});
+
+client.on("store_msg", (data)=>{
+  if(data){
+    let messagesStore = safeParse(localStorage.getItem("messages"), {});
+    
+    if (!messagesStore[data.msg_data.room]) messagesStore[data.msg_data.room] = [];
+  
+      messagesStore[data.msg_data.room].push(data.msg_data);
+      // data comes from server with id, time, sender, type, content etc
+      localStorage.setItem("messages", JSON.stringify(messagesStore));
+      messages = messagesStore;
+  }
+})
+
+client.on("your_msg", (data)=>{
+  if(data){
+    let messagesStore = safeParse(localStorage.getItem("messages"), {});
+    
+    if (!messagesStore[data.room]) messagesStore[data.room] = [];
+
+    // ✅ FIX: spread array
+    messagesStore[data.room] = data.msgs;
+
+    localStorage.setItem("messages", JSON.stringify(messagesStore));
+    messages = messagesStore;
+
+
+    // ✅ render only this room
+    if (data.room === current_chat_room) {
+      loadMessages(data.room);
+    }
+  }
+});
+
+
+attachBtn.addEventListener('click', () => fileInput.click());  
+fileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleImageUpload(e.target.files[0]); });  
+  
+      // lightbox  
+  const lightbox = document.getElementById('lightbox');  
+  const lightboxImg = document.getElementById('lightboxImg');  
+  const lightboxClose = document.getElementById('lightboxClose');  
+  messageContainer.addEventListener('click', (e) => {
+    const img = e.target.closest('.message-image');  
+    if (!img) return;  
+    lightboxImg.src = img.src;  
+    lightbox.classList.add('active');  
+  });  
+  
+  
+  lightboxClose.addEventListener('click', () => { lightbox.classList.remove('active'); lightboxImg.src = ''; });
+  
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) { lightbox.classList.remove('active'); lightboxImg.src = ''; } });
+  
+  enableNotificationsBtn.addEventListener('click', async () => {
+  const permission = await Notification.requestPermission();
+
+  console.log("Permission:", permission);
+
+  if (permission !== "granted") return;
+
+  const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  await navigator.serviceWorker.ready;
+
+  const token = await getFCMToken(registration);
+  console.log("Token:", token);
+
+  const user_id = user_data.userid;
+  client.emit("save_token", { user_id, token });
+
+  enableNotificationsBtn.innerHTML = `<i class="fas fa-bell"></i>Notification Enabled`;
+  enableNotificationsBtn.disabled = true;
+});
+
+    // ========== NEW: Theme Toggle and Ripple Effect (no conflict with original JS) ==========
+    const darkToggle = document.getElementById('darkModeToggle');
+    const likeToggle = document.getElementById('likeModeToggle');
+    
+    function setTheme(theme) {
+      const body = document.body;
+      body.classList.remove('dark', 'like');
+      if (theme === 'dark') body.classList.add('dark');
+      if (theme === 'like') body.classList.add('like');
+      localStorage.setItem('ui_theme', theme);
+      // update active styles (optional visual)
+      if (darkToggle && likeToggle) {
+        darkToggle.style.opacity = theme === 'dark' ? '0.8' : '0.5';
+        likeToggle.style.opacity = theme === 'like' ? '0.8' : '0.5';
+      }
+    }
+    
+    if (darkToggle) {
+      darkToggle.addEventListener('click', () => {
+        const current = localStorage.getItem('ui_theme');
+        setTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    }
+    if (likeToggle) {
+      likeToggle.addEventListener('click', () => {
+        const current = localStorage.getItem('ui_theme');
+        setTheme(current === 'like' ? 'light' : 'like');
+      });
+    }
+    
+    const savedTheme = localStorage.getItem('ui_theme');
+    if (savedTheme === 'dark' || savedTheme === 'like') setTheme(savedTheme);
+    else setTheme('light');
+    
+    // Ripple effect for all buttons
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${e.clientX - rect.left - size/2}px`;
+        ripple.style.top = `${e.clientY - rect.top - size/2}px`;
+      
+        const originalPosition =window.getComputedStyle(this).position;
+
+        if(originalPosition !== 'absolute' && originalPosition !== 'fixed') {
+          this.style.position = 'relative';
+        }
+
+        this.appendChild(ripple);
+
+        setTimeout(() => {
+          ripple.remove()
+          if (originalPosition !== 'absolute' && originalPosition !== 'fixed') {
+            this.style.position = "";
+          }
+        }, 500);
+      });
+    });
+
+    // ========== IMPROVED TYPING INDICATOR: Emit "typing" only once and clear after idle ==========
+    document.getElementById("messageInput").addEventListener("input", function(e) {
+      const room = current_chat_room;
+      if (!room) return;
+
+      // Clear previous idle timeout
+      if (typingTimeout) clearTimeout(typingTimeout);
+
+      // If not already in "typing" state, send it once
+    });
+
+    // ========== RECEIVED TYPING INDICATOR: Show for 3 seconds, then hide automatically ==========
+    client.on("your_status", (data) => {
+      if (!data.status) return;
+
+      const indicator = document.getElementById("typingIndicatorHeader");
+      const newStatus = data.status;
+
+      if(newStatus){
+        indicator.textContent = newStatus;
+      }
+    });
+
+    let baseHeight = window.innerHeight;
+
+    function adjustLayout() {
+      const chatModal = document.querySelector('.chat-modal-overlay');
+      
+      if(window.visualViewport) {
+        chatModal.style.height = window.visualViewport.height + 'px';
+      }else{
+        chatModal.style.height = window.innerHeight + 'px';
+      }
+    }
+
+    window.addEventListener('resize', () =>{
+      const currentHeight = window.innerHeight;
+
+      if(Math.abs(currentHeight - baseHeight) < 100){
+        baseHeight = currentHeight;
+      }
+      adjustLayout();
+    });
+
+    adjustLayout();
+  </script>
+</body>
+</html>
