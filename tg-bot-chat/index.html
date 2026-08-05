@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Telora · Private Chat</title>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+ <link rel="stylesheet" href="./static/style/telora1.css">
+ <link rel="manifest" href="./static/jsons/manifest.json">
+ <meta name="theme-color" content="#111827">
+ <meta name="apple-mobile-web-app-status-bar-style" content="#111827">
+ <meta name="apple-mobile-web-app-title" content="Telora">
+ <link rel="apple-touch-icon" href="./static/icons/telora-icon2-192.png">
+ </head>
+<body>
+     <div class="chat">
+    <!-- RIGHT PANEL: global header only -->
+    <div class="main-panel">
+      <div class="chat-header">
+        <span class="header-title"><img src="./static/icons/telora-icon-512.png"></span>
+        <div class="user-badge">
+          <i class="far fa-user-circle"></i>
+          <span id="userDisplayName"></span>
+          <span id="userDisplayId">logout</span>
+        </div>
+
+        <!-- NEW THEME TOGGLES (added without breaking layout) -->
+        <div class="theme-controls" style="display: flex; gap: 0.5rem; margin-left: auto; background: rgba(128,128,128,0.1); padding: 0.2rem 0.4rem; border-radius: 60px;">
+          <button id="darkModeToggle" class="theme-btn" style="background: transparent; border: none; font-size: 1.2rem; padding: 0.4rem 0.7rem; border-radius: 40px; cursor: pointer;"><i class="fas fa-moon"></i></button>
+          <button id="likeModeToggle" class="theme-btn" style="background: transparent; border: none; font-size: 1.2rem; padding: 0.4rem 0.7rem; border-radius: 40px; cursor: pointer;"><i class="fas fa-heart"></i></button>
+        </div>
+
+        <div class="peer-label-wrapper">
+          <div class="peer-label-header">
+            <i class="fas fa-id-card"></i>
+            <span>Username</span>
+          </div>
+          <div class="peer-id-container">
+            <span class="peer-id-text" id="peerIdLabel" title="Click to copy">loading…</span>
+            <button class="copy-btn" id="copyPeerIdBtn" title="Copy to clipboard">
+              <i class="far fa-copy"></i>
+            </button>
+          </div>
+          <div class="copy-feedback" id="copyFeedback">Copied!</div>
+        </div>
+        <div class="connect-section">
+          <input type="text" id="remotePeerId" placeholder=" search">
+          <button id="connectBtn"><i class="fas fa-search"></i></button>
+        </div>
+        <button id="enableNotificationsBtn" class="enable-notif-btn" title="Enable browser notifications">
+          <i class="fas fa-bell"></i> Enable Notifications
+        </button>
+        <span class="connection-status" id="connectionStatus"></span>
+      </div>
+    </div>
+
+    <!-- LEFT PANEL: friends -->
+    <div class="friends-panel">
+      <div class="friends-header">
+        <h3><i class="far fa-address-book"></i> friends</h3>
+        <button class="add-friend-btn" id="showAddFriendModal"><i class="fas fa-plus-circle"></i> customize</button>
+      </div>
+      <div class="recent-inside">
+        <div class="recent-header"><i class="far fa-clock"></i> recent</div>
+        <div class="recent-list" id="recentList"></div>
+      </div>
+      <div class="friend-list-vertical" id="friendListVertical"></div>
+    </div>
+  </div>
+
+  <!-- CHAT MODAL (Telegram-style overlay) -->
+  <div class="chat-modal-overlay" id="chatModalOverlay">
+    <div class="chat-modal" id="chatModal">
+      <div class="chat-modal-header">
+        <div class="chat-user">
+          <div class="chat-avatar" id="chatAvatar">A</div>
+          <h3 id="chatFriendName"></h3>
+        </div>
+        <button class="close-modal-btn" id="closeChatModal"><i class="fas fa-times"></i></button>
+      </div>
+      <span id="typingIndicatorHeader" class="typing-status" style="display: block;">
+        last seen recently
+      </span>
+      <div class="messages-container" id="messageContainer"></div>
+      <div class="input-bar">
+        <input type="file" id="imageUpload" accept="image/*">
+        <button class="attach-btn" id="attachImageBtn"><i class="far fa-image"></i></button>
+        <input type="text" id="messageInput" placeholder="type a message">
+        <input type="file" id="audioPicker" accept="*/*" hidden>
+        <button class="send-btn" id="sendMessageBtn"><i class="fa-solid fa-microphone" id="sendIcon"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div id="toast" class="toast"><i class="far fa-info-circle"></i> <span id="toastMsg"></span></div>
+  <!-- lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <!-- MODALS: registration / add friend / confirm remove -->
+  <div class="modal" id="registerModal">
+    <div class="modal-card">
+      <h2><i class="far fa-hand-peace"></i> welcome</h2>
+      <p style="color:#6f7c93; display: none;">bot token</p>
+    <input type="text" id="regUsername" placeholder="enter bot token" autocomplete="off">
+      <p style="color:#6f7c93; display:none;">enter password</p>
+      <input style="display: none;" type="text" id="regPassword" placeholder="password" autocomplete="on">
+      <div class="modal-error" id="regError"></div>
+      <button class="modal-btn" id="registerBtn"> <i class="fas fa-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <div class="modal" id="addFriendModal">
+    <div class="modal-card">
+      <h2><i class="fas fa-search"></i> search</h2>
+      <input type="text" id="friendIdInput" placeholder="friends, chats, groups, feeds">
+      <input type="text" id="friendNameInput" placeholder="description" disabled>
+      <div class="modal-error" id="friendError"></div>
+      <button class="modal-btn" id="saveFriendBtn">open</button>
+      <button class="cancel-link" id="closeAddFriendModal">cancel</button>
+    </div>
+  </div>
+
+  <div class="modal" id="confirmRemoveModal">
+    <div class="modal-card">
+      <h2><i class="fas fa-exclamation-triangle" style="color:#d97706;"></i> remove friend</h2>
+      <p style="margin: 1rem 0;">Are you sure you want to remove <span id="removeFriendName"></span> from your list?</p>
+      <div class="modal-error" id="removeError"></div>
+      <button class="modal-btn" id="confirmRemoveBtn" style="background:#b44;">yes, remove</button>
+      <button class="cancel-link" id="cancelRemoveBtn">cancel</button>
+    </div>
+  </div>
+  <script type="module">
+    import cnn from "./static/jscript/connection.js";
+    import t_user from "./static/jscript/user.js";
+    import helper from "./static/jscript/helper.js";
+
+
+    const connect_status = document.getElementById("connectionStatus");
+
+    const internet_status = await cnn.hasInternet();
+    const registerModal = document.getElementById('registerModal');
+    const botoken_div = document.getElementById("regUsername");
+    const registerBtn = document.getElementById('registerBtn');
+    
+    const container = document.getElementById("friendListVertical");
+ 
+    const username = document.getElementById("peerIdLabel");
+    const f_name = document.getElementById("userDisplayName");
+    
+    
+    
+    let baseHeight = window.innerHeight;
+ 
+
+    console.log(internet_status.connected); // true or false
+    console.log(internet_status.connection); // Offline or Online
+
+
+    if(internet_status.connected){
+        await t_user.telora_user(registerModal, botoken_div, registerBtn, f_name, username, container);
+        connect_status.innerHTML = `<i class="fas fa-circle" style="color: green;"> </i>${internet_status.connection}`;
+    }else{
+        connect_status.innerHTML = `<i class="fas fa-circle" style="color: red;"> </i>${internet_status.connection}`;
+    }
+    
+  const input_txt = document.getElementById("messageInput");
+  
+  const icon_ic = document.getElementById("sendIcon");
+
+input_txt.addEventListener("input", () => {
+  if (input_txt.value.trim()) {
+    icon_ic.className = "fa-solid fa-paper-plane";
+  } else {
+    icon_ic.className = "fa-solid fa-microphone";
+  }
+});
+
+
+ // Theme Toggle
+    const darkToggle = document.getElementById('darkModeToggle');
+    const likeToggle = document.getElementById('likeModeToggle');
+    
+    function setTheme(theme) {
+      const body = document.body;
+      body.classList.remove('dark', 'like');
+      if (theme === 'dark') body.classList.add('dark');
+      if (theme === 'like') body.classList.add('like');
+      localStorage.setItem('ui_theme', theme);
+      // update active styles (optional visual)
+      if (darkToggle && likeToggle) {
+        darkToggle.style.opacity = theme === 'dark' ? '0.8' : '0.5';
+        likeToggle.style.opacity = theme === 'like' ? '0.8' : '0.5';
+      }
+    }
+    
+    if (darkToggle) {
+      darkToggle.addEventListener('click', () => {
+        const current = localStorage.getItem('ui_theme');
+        setTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    }
+    if (likeToggle) {
+      likeToggle.addEventListener('click', () => {
+        const current = localStorage.getItem('ui_theme');
+        setTheme(current === 'like' ? 'light' : 'like');
+      });
+    }
+    
+    const savedTheme = localStorage.getItem('ui_theme');
+    if (savedTheme === 'dark' || savedTheme === 'like') setTheme(savedTheme);
+    else setTheme('light');
+
+
+  function adjustLayout() {
+  const chatModal = document.querySelector('.chat-modal-overlay');
+  
+  if (window.visualViewport) {
+    chatModal.style.height = window.visualViewport.height + 'px';
+  } else {
+    chatModal.style.height = window.innerHeight + 'px';
+  }
+}
+
+window.addEventListener('resize', () => {
+  const currentHeight = window.innerHeight;
+  
+  if (Math.abs(currentHeight - baseHeight) < 100) {
+    baseHeight = currentHeight;
+  }
+  adjustLayout();
+});
+
+adjustLayout();
+
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./static/jscript/service-worker.js");
+}
+
+
+  </script>
+</body>
+</html>   
