@@ -300,14 +300,29 @@ copyBtn.addEventListener("click", async ()=> {
 
       if(u_name){
         const url = `https://t.me/${u_name}/`;
+        await copyToClipboard(url);
+        copyBtnFeedBack.style.display = "flex";
 
-        
+        setTimeout(()=>{
+          copyBtnFeedBack.style.display = "none";
+
+        }, 2000);
+
+
       }
     }
 
   }
+});
 
+const logOutBtn = document.getElementById("userDisplayId");
 
+logOutBtn.addEventListener("click", async ()=>{
+  localStorage.clear();
+  const user_db = new user_dataset("telora_user_db");
+  await user_db.delete_dataset();
+  location.reload();
+  
 });
   </script>
 </body>
