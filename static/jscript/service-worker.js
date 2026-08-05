@@ -1,4 +1,4 @@
-const CACHE = "telora-v1";
+const CACHE = "telora-v0.0.2";
 
 const FILES = [
   "./",
@@ -14,7 +14,7 @@ const FILES = [
   
   "./static/icons/telora-icon-192.png",
   "./static/icons/telora-icon-512.png",
-  "./static/icons/tolera-icon2-192.PNG"
+  "./static/icons/telora-icon2-192.png"
 ];
 
 self.addEventListener("install", event => {
