@@ -18,7 +18,7 @@
     <!-- RIGHT PANEL: global header only -->
     <div class="main-panel">
       <div class="chat-header">
-        <span class="header-title"><img src="./static/icons/telora-icon-512.png"></span>
+        <span class="header-title" id="telora_img"><img src="./static/icons/telora-icon-512.png"></span>
         <div class="user-badge">
           <i class="far fa-user-circle"></i>
           <span id="userDisplayName"></span>
@@ -317,13 +317,20 @@ copyBtn.addEventListener("click", async ()=> {
 
 const logOutBtn = document.getElementById("userDisplayId");
 
+const telora_logo = document.getElementById("telora_img");
+
 logOutBtn.addEventListener("click", async ()=>{
   localStorage.clear();
   const user_db = new user_dataset("telora_user_db");
   await user_db.delete_dataset();
   location.reload();
-  
+
 });
+
+telora_logo.addEventListener("click", ()=> {
+  location.reload();
+});
+
   </script>
 </body>
 </html>   
