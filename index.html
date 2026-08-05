@@ -139,6 +139,8 @@
     import t_user from "./static/jscript/user.js";
     import helper from "./static/jscript/helper.js";
 
+    import user_dataset from "../dataset-src/index.js";
+
 
     const connect_status = document.getElementById("connectionStatus");
 
@@ -243,6 +245,35 @@ if ("serviceWorker" in navigator) {
 }
 
 
+
+const copyBtn = document.getElementById("copyPeerIdBtn");
+
+const bot_username = document.getElementById("peerIdLabel");
+
+const copyBtnFeedBack = document.getElementById("copyFeedback");
+
+copyBtn.addEventListener("click", async ()=> {
+  const user_botoken = localStorage.getItem("bot_token");
+
+  if(user_botoken){
+    const user_db = new user_dataset("telora_user_db");
+
+    const data = await user_db.select_from("user", "user_data");
+
+    if(data){
+      const u_name = data.username;
+
+      if(u_name){
+        const url = `https://t.me/${u_name}/`;
+
+        
+      }
+    }
+
+  }
+
+
+});
   </script>
 </body>
 </html>   
