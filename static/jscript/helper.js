@@ -1,5 +1,19 @@
 import telegramApi from "./telegram-api.js";
 
+const ss_input = document.getElementById("messageInput");
+const ss_button = document.getElementById("sendMessageBtn");
+
+const audioPicker = document.getElementById("audioPicker");
+
+// Open the picker
+function openAudioPicker() {
+  audioPicker.value = ""; // Optional: allows selecting the same file again
+  audioPicker.click();
+}
+
+
+
+
 let recent_chat = safeParse(localStorage.getItem("recent_chat"), []);
 
 let current_chat = null;
@@ -39,7 +53,7 @@ function formatTelegramDate(unixTime) {
 
 
 
-async function renderMessages(messages, user_db) {
+async function renderMessages(messages, user_db, state="") {
   if (!Array.isArray(messages)) {
     messages = [messages];
   }
@@ -50,7 +64,7 @@ async function renderMessages(messages, user_db) {
     
     const user_data = await user_db.select_from("user", "user_data");
 
-    const timeStr = msg.date || "";  
+    const timeStr = msg.date || "just now";  
     const wrapperClass = msg.chat_id === user_data.id 
       ? 'message-wrapper me' 
       : 'message-wrapper other';
@@ -60,7 +74,7 @@ async function renderMessages(messages, user_db) {
         <div class="message-bubble">  
           <div class="bubble-content">  
             <span class="message-text" data-full="${escapeHTML(msg.message)}">${formatMessagePreview(msg.message)}</span>  
-            <span class="timestamp">${formatTelegramDate(timeStr)}</span>  
+            <span class="timestamp">${formatTelegramDate(timeStr)} <span data-message-id="${msg.message_id}"><i class="fa-solid ${state === "pending" ? "fa-clock" : "fa-check"}"></i></span></span>  
           </div>  
         </div>  
       </div>`;
@@ -69,7 +83,7 @@ async function renderMessages(messages, user_db) {
         <div class="message-bubble">  
           <div class="bubble-content">  
             <img src="${msg.message}" alt="image" class="message-image" loading="lazy">  
-            <span class="timestamp">${formatTelegramDate(timeStr)}</span>  
+            <span class="timestamp">${formatTelegramDate(timeStr)} <span data-message-id="${msg.message_id}"><i class="fa-solid ${state === "pending" ? "fa-clock" : "fa-check"}"></i></span></span>  
           </div>  
         </div>  
       </div>`;
@@ -78,7 +92,7 @@ async function renderMessages(messages, user_db) {
         <div class="message-bubble">  
           <div class="bubble-content">  
             <video src="${msg.message}" alt="video" class="message-image" controls playsinline preload="metadata" ></video> 
-            <span class="timestamp">${formatTelegramDate(timeStr)}</span>  
+            <span class="timestamp">${formatTelegramDate(timeStr)} <span data-message-id="${msg.message_id}"><i class="fa-solid ${state === "pending" ? "fa-clock" : "fa-check"}"></i></span></span>  
           </div>  
         </div>  
       </div>`;
@@ -87,7 +101,7 @@ async function renderMessages(messages, user_db) {
         <div class="message-bubble">  
           <div class="bubble-content">  
             <audio src="${msg.message}" preload="metadata" class="message-image" controls></audio>  
-            <span class="timestamp">${formatTelegramDate(timeStr)}</span>  
+            <span class="timestamp">${formatTelegramDate(timeStr)} <span data-message-id="${msg.message_id}"><i class="fa-solid ${state === "pending" ? "fa-clock" : "fa-check"}"></i></span></span>  
           </div>  
         </div>  
       </div>`;
@@ -209,44 +223,57 @@ console.log("type:", typeof friends);
 
 
 async function openChatModal(room, friendName, user_db) {
-  if(!room && !friendName){
-    return
-  }
-  const user_data = await user_db.select_from("user", "user_data");
-
-  const myname = user_data.first_name;
+  if (!room || !friendName) return;
   
-  document.getElementById("chatFriendName").innerText = `${friendName}`;
+  const user_data = await user_db.select_from("user", "user_data");
+  
+  document.getElementById("chatFriendName").innerText = friendName;
+  
   const avatar = document.getElementById("chatAvatar");
   avatar.textContent = friendName.charAt(0).toUpperCase();
   
-  await loadMessages(room, user_db);
-  chatModalOverlay.classList.add('active');
-  addRecent(room, friendName, user_db);
-  
-  document.getElementById("closeChatModal").addEventListener("click", async ()=>{
-   await hideChatModal();
-  });
-  
   current_chat = room;
   
-  const attachImageBtn = document.getElementById("attachImageBtn");
+  await loadMessages(room, user_db);
   
+  chatModalOverlay.classList.add("active");
+  
+  addRecent(room, friendName, user_db);
+  
+  document.getElementById("closeChatModal").onclick = async () => {
+    await hideChatModal();
+  };
+  
+  const attachImageBtn = document.getElementById("attachImageBtn");
   mediaPicker(attachImageBtn, room);
   
-  document.getElementById("sendMessageBtn").addEventListener("click", async()=>{
-    const text = document.getElementById("messageInput").value.trim();
-    const type = "text";
+  // Send button
+  ss_button.onclick = async () => {
+    const text = ss_input.value.trim();
     
-    console.log(text);
-    
-    if(text && type){
-      await telegramApi.send_message(type, room, text);
+    if (text) {
+      ss_button.disabled = true;
+      
+      try {
+        await telegramApi.send_message("text", room, text);
+      } finally {
+        ss_button.disabled = false;
+      }
+      
+    } else {
+      openAudioPicker();
     }
-  });
+  };
+  
+  // Audio picker
+  audioPicker.onchange = async () => {
+    const file = audioPicker.files[0];
+    if (!file) return;
+    
+    await telegramApi.send_message("audio", room, file);
+  };
   
   console.log("chat is open");
-
 }
 
 async function get_current_chat() {
@@ -461,29 +488,42 @@ messageContainer.addEventListener("click", function(e) {
 // media-picker.js
 
 function mediaPicker(target, chatId) {
-  const input = document.createElement("input");
+  // Reuse the same input
+  let input = target._mediaInput;
   
-  input.type = "file";
-  input.accept = "image/*,video/*,audio/*";
+  if (!input) {
+    input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,video/*,audio/*";
+    input.style.display = "none";
+    
+    document.body.appendChild(input);
+    target._mediaInput = input;
+  }
   
-  target.addEventListener("click", () => {
+  target.onclick = () => {
     input.value = "";
     input.click();
-  });
+  };
   
-  input.addEventListener("change", async () => {
+  input.onchange = async () => {
     const file = input.files[0];
     if (!file) return;
     
-    let type = "unknown";
+    let type;
     
-    if (file.type.startsWith("image/")) type = "image";
-    else if (file.type.startsWith("video/")) type = "video";
-    else if (file.type.startsWith("audio/")) type = "audio";
+    if (file.type.startsWith("image/")) {
+      type = "image";
+    } else if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("audio/")) {
+      type = "audio";
+    } else {
+      return;
+    }
     
     await telegramApi.send_message(type, chatId, file);
-    
-  });
+  };
 }
 
 
