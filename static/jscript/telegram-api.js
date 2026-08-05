@@ -143,15 +143,38 @@ async function get_updates(token, database) {
 
 
 async function send_message(type, chatId, message, caption="") {
+    console.log("send_message called", type, chatId, message);
+    
     const form = new FormData();
     const token = localStorage.getItem("bot_token");
-    let update_id = 1;
-    let msg_id = 1;
+   
     let messages = await nuser_db.select_from("messages", "message_data") || {};
+    
+    const tempId = crypto.randomUUID();
     
     const data = await nuser_db.select_from("user", "user_data");
     
-    if(type === "text"){
+    const unixTime = Math.floor(Date.now() / 1000);
+    
+    let newMessage = {
+        chat_id: data.id,
+        message_id: tempId,
+        type: type,
+        file_id: "",
+        message: message,
+        date: unixTime,
+    };
+    
+    if(type === "text" && message){
+        
+        await helper.renderMessages(newMessage, nuser_db, "pending");
+        
+        const input = document.getElementById("messageInput");
+        
+        input.value = "";
+        
+        input.dispatchEvent(new Event("input"));
+        
        const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
            method: "POST",
            headers: {
@@ -167,33 +190,38 @@ async function send_message(type, chatId, message, caption="") {
        const rop = await res.json();
        if(rop.ok){
            
-           const unixTime = Math.floor(Date.now() / 1000);
+            const state = document.querySelector(`[data-message-id="${newMessage.message_id}"]`);
            
-           const newMessage = {
-              update_id: update_id,
-              chat_id: data.id,
-              message_id: msg_id,
-              type: type,
-              fri_id: chatId,
-              message: message,
-              date: unixTime,
-            };
-            msg_id += 1;
-            update_id += 1;
+            if (state) {
+                console.log("stete is avail");
+               const icon = state.querySelector("i");
+               icon.className = "fa-solid fa-check";
+    
+            }
             
+            console.log(rop.result);
+           
+           newMessage.message_id = rop.result.message_id;
+           
+           
             messages[chatId].push(newMessage);
             
             await nuser_db.insert("messages", messages, "message_data");
             
-            await helper.renderMessages(newMessage, nuser_db);
-            document.getElementById("messageInput").value = "";
+            
        }
        
-    }else if(type === "image"){
+    }else if(type === "image" && message){
         
         form.append("chat_id", chatId);
         form.append("photo", message); // File or Blob
         form.append("caption", caption);
+        
+        const url = URL.createObjectURL(message);
+        newMessage.message = url;
+        newMessage.type = "image";
+        
+        await helper.renderMessages(newMessage, nuser_db, "pending");
         
         const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`,
         {
@@ -205,29 +233,27 @@ async function send_message(type, chatId, message, caption="") {
         
        if (rop.ok) {
            
-           const unixTime = Math.floor(Date.now() / 1000);
-           
            const fileId = rop.result.photo.at(-1).file_id;
-           const url = await getFileUrl(token, fileId);
-           const newMessage = {
-               update_id: update_id,
-               chat_id: data.id,
-               message_id: msg_id,
-               type: type,
-               fri_id: chatId,
-               message: url,
-               date: unixTime,
-           };
-           msg_id += 1;
-           update_id += 1;
+           
+           const i_url = await getFileUrl(token, fileId);
+           
+            const state = document.querySelector(`[data-message-id="${newMessage.message_id}"]`);
+            
+            if (state) {
+                console.log("stete is avail");
+                const icon = state.querySelector("i");
+                icon.className = "fa-solid fa-check";
+                
+            }
+            
+            newMessage.message = i_url;
+            newMessage.message_id = rop.result.message_id;
+            newMessage.file_id = fileId;
            
            messages[chatId].push(newMessage);
            
            await nuser_db.insert("messages", messages, "message_data");
            
-           await helper.renderMessages(newMessage, nuser_db);
-           
-           document.getElementById("messageInput").value = "";
        }
         
         console.log(rop);
@@ -236,6 +262,14 @@ async function send_message(type, chatId, message, caption="") {
         form.append("chat_id", chatId);
         form.append("video", message);
         form.append("caption", caption);
+        
+        const url = URL.createObjectURL(message);
+        
+        newMessage.message = url;
+        newMessage.type = "video";
+        
+        await helper.renderMessages(newMessage, nuser_db, "pending");
+        
         const res = await fetch(`https://api.telegram.org/bot${token}/sendVideo`,
         {
             method: "POST",
@@ -243,40 +277,46 @@ async function send_message(type, chatId, message, caption="") {
         });
         
        const rop = await res.json();
-       console.log(rop);
+       
        if (rop.ok) {
-           
-           const unixTime = Math.floor(Date.now() / 1000);
            
            const fileId = rop.result.video.file_id;
            
-           const url = await getFileUrl(token, fileId);
+           const v_url = await getFileUrl(token, fileId);
            
-           const newMessage = {
-               update_id: update_id,
-               chat_id: data.id,
-               message_id: msg_id,
-               type: type,
-               fri_id: chatId,
-               message:url,
-               date: unixTime,
-           };
-           msg_id += 1;
-           update_id += 1;
+            const state = document.querySelector(`[data-message-id="${newMessage.message_id}"]`);
+            
+            if (state) {
+                console.log("stete is avail");
+                const icon = state.querySelector("i");
+                icon.className = "fa-solid fa-check";
+                
+            }
+            
+            newMessage.message = v_url;
+            newMessage.message_id = rop.result.message_id;
+            newMessage.file_id = fileId;
            
+           
+
            messages[chatId].push(newMessage);
            
            await nuser_db.insert("messages", messages, "message_data");
            
-           await helper.renderMessages(newMessage, nuser_db);
-           
-           document.getElementById("messageInput").value = "";
        }        
         console.log(rop);
         
     }else if(type === "audio"){
         form.append("chat_id", chatId);
         form.append("voice", message);
+
+        const url = URL.createObjectURL(message);
+        
+        newMessage.message = url;
+        newMessage.type = "audio";
+        
+        await helper.renderMessages(newMessage, nuser_db, "pending");        
+        
         const res = await fetch(`https://api.telegram.org/bot${token}/sendVoice`,
         {
             method: "POST",
@@ -288,33 +328,33 @@ async function send_message(type, chatId, message, caption="") {
         
        if (rop.ok) {
            
-           const unixTime = Math.floor(Date.now() / 1000);
-           
            const fileId = rop.result.voice.file_id;
+           console.log(fileId);
            
-           const url = getFileUrl(token, fileId);
+           const a_url = await getFileUrl(token, fileId);
            
-           const newMessage = {
-               update_id: update_id,
-               chat_id: data.id,
-               message_id: msg_id,
-               type: type,
-               fri_id: chatId,
-               message:url,
-               date: unixTime,
-           };
-           msg_id += 1;
-           update_id += 1;
-           
+            const state = document.querySelector(`[data-message-id="${newMessage.message_id}"]`);
+            
+            if (state) {
+                console.log("stete is avail");
+                const icon = state.querySelector("i");
+                icon.className = "fa-solid fa-check";
+                
+            }
+            
+            newMessage.message = a_url;
+            newMessage.message_id = rop.result.message_id;
+            newMessage.file_id = fileId;
+
            messages[chatId].push(newMessage);
            
            await nuser_db.insert("messages", messages, "message_data");
            
-           await helper.renderMessages(newMessage, nuser_db);
-           document.getElementById("messageInput").value = "";
        }
         
     }
+    
+    return true;
 }
 
 
