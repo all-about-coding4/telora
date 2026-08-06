@@ -113,8 +113,6 @@ async function get_token(modal, t_div, token, f_name, username, container) {
             });
             
             //console.log(b_data);
-        }else{
-            //console.log(result);
         }
 
     });

@@ -1,4 +1,4 @@
-const CACHE = "telora-v0.0.3";
+const CACHE = "telora-v0.0.5";
 
 const FILES = [
   "../../",
