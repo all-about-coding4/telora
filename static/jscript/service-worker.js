@@ -1,20 +1,20 @@
 const CACHE = "telora-v0.0.4";
 
 const FILES = [
-  "./",
-  "./index.html",
-  "./static/jsons/manifest.json",
+  "../../",
+  "../../index.html",
+  "../jsons/manifest.json",
   
-  "./static/style/telora1.css",
+  "../style/telora1.css",
 
-  "./static/jscript/helper.js",
+  "./helper.js",
 
-  "./static/jscript/user.js",
-  "./static/jscript/watchdog.js",
+  "./user.js",
+  "./watchdog.js",
   
-  "./static/icons/telora-icon-192.png",
-  "./static/icons/telora-icon-512.png",
-  "./static/icons/telora-icon2-192.png"
+  "../icons/telora-icon-192.png",
+  "../icons/telora-icon-512.png",
+  "../icons/telora-icon2-192.png"
 ];
 
 self.addEventListener("install", event => {
