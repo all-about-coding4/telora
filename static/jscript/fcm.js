@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDk4nh6rg21fb6SQHzWheZbLV37VsnjKRg",
+  apiKey: "",
   authDomain: "lyknup-ff9e5.firebaseapp.com",
   projectId: "lyknup-ff9e5",
   storageBucket: "lyknup-ff9e5.appspot.com",
