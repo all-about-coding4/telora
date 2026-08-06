@@ -244,79 +244,8 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./static/jscript/service-worker.js");
 }
 
-async function copyToClipboard(text) {
-  // Modern browsers
-  if (navigator.clipboard && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch (err) {
-      console.warn("Clipboard API failed, using fallback...");
-    }
-  }
-
-  // Fallback for older browsers
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-
-  // Prevent scrolling on iOS
-  textarea.style.position = "fixed";
-  textarea.style.top = "0";
-  textarea.style.left = "0";
-  textarea.style.opacity = "0";
-
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  textarea.setSelectionRange(0, textarea.value.length); // Important for iOS
-
-  let success = false;
-  try {
-    success = document.execCommand("copy");
-  } catch (err) {
-    success = false;
-  }
-
-  document.body.removeChild(textarea);
-  return success;
-}
-
-const copyBtn = document.getElementById("copyPeerIdBtn");
-
-const bot_username = document.getElementById("peerIdLabel");
-
-const copyBtnFeedBack = document.getElementById("copyFeedback");
-
-copyBtn.addEventListener("click", async ()=> {
-  const user_botoken = localStorage.getItem("bot_token");
-
-  if(user_botoken){
-    const user_db = new user_dataset("telora_user_db");
-
-    const data = await user_db.select_from("user", "user_data");
-
-    if(data){
-      const u_name = data.username;
-
-      if(u_name){
-        const url = `https://t.me/${u_name}/`;
-        await copyToClipboard(url);
-        copyBtnFeedBack.style.display = "flex";
-
-        setTimeout(()=>{
-          copyBtnFeedBack.style.display = "none";
-
-        }, 2000);
-
-
-      }
-    }
-
-  }
-});
 
 const logOutBtn = document.getElementById("userDisplayId");
-
 
 const telora_logo = document.getElementById("imgBtn");
 

@@ -1,4 +1,5 @@
 import telegramApi from "./telegram-api.js";
+import user_dataset from "../dataset-src/index.js";
 
 const ss_input = document.getElementById("messageInput");
 const ss_button = document.getElementById("sendMessageBtn");
@@ -11,7 +12,63 @@ function openAudioPicker() {
   audioPicker.click();
 }
 
+const copyBtn = document.getElementById("copyPeerIdBtn");
 
+const bot_username = document.getElementById("peerIdLabel");
+
+const copyBtnFeedBack = document.getElementById("copyFeedback");
+
+copyBtn.addEventListener("click", async ()=> {
+  const user_botoken = localStorage.getItem("bot_token");
+
+  if(!user_botoken){
+    console.log("no bot token");
+    return;
+  }
+
+  const user_db = new user_dataset("telora_user_db");
+
+  const data = await user_db.select_from("user", "user_data");
+  const url = `https://t.me/${data.username}/`;
+
+  await copyPeerId(url);
+});
+
+async function copyPeerId(text) {
+
+  if (!text) {
+    showToast(toastMsg, toastEl, 'failed to copy', 'fa-circle-exclamation', 'fa-solid');
+    return;
+  }
+
+  // Modern clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showCopyFeedback())
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.top = '-100px';
+  textarea.style.left = '-100px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const success = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  if (success) showCopyFeedback();
+  else console.warn('Fallback copy failed');
+}
+
+function showCopyFeedback() {
+  copyBtnFeedBack.classList.add('show');
+  setTimeout(() => copyBtnFeedBack.classList.remove('show'), 1500);
+}
 
 
 let recent_chat = safeParse(localStorage.getItem("recent_chat"), []);
