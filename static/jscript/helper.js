@@ -66,6 +66,7 @@ function fallbackCopy(text) {
 }
 
 function showCopyFeedback() {
+  console.log("copy feedback");
   copyBtnFeedBack.classList.add('show');
   setTimeout(() => copyBtnFeedBack.classList.remove('show'), 1500);
 }
