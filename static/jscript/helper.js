@@ -34,6 +34,22 @@ copyBtn.addEventListener("click", async ()=> {
   await copyPeerId(url);
 });
 
+bot_username.addEventListener("click", async ()=> {
+  const user_botoken = localStorage.getItem("bot_token");
+
+  if(!user_botoken){
+    console.log("no bot token");
+    return;
+  }
+
+  const user_db = new user_dataset("telora_user_db");
+
+  const data = await user_db.select_from("user", "user_data");
+  const url = `https://t.me/${data.username}/`;
+
+  await copyPeerId(url);
+});
+
 async function copyPeerId(text) {
 
   if (!text) {
@@ -66,7 +82,7 @@ function fallbackCopy(text) {
 }
 
 function showCopyFeedback() {
-  console.log("copy feedback");
+  console.log("copy feedback")
   copyBtnFeedBack.classList.add('show');
   setTimeout(() => copyBtnFeedBack.classList.remove('show'), 1500);
 }
