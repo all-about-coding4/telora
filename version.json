@@ -2,20 +2,20 @@
     "VERSION": "O.0.3",
     "BASE_URL": "https://all-about-coding4.github.io/telora/",
     "FILES": [
-        "../../",
-        "../../index.html",
-        "../jsons/manifest.json",
+        "./",
+        "./index.html",
+        "./static/jsons/manifest.json",
   
-        "../style/telora1.css",
+        "./static/style/telora1.css",
 
-        "./helper.js",
+        "./static/jscript/helper.js",
 
-        "./user.js",
+        "./static/jscript/user.js",
         "./watchdog.js",
   
-        "../icons/telora-icon-192.png",
-        "../icons/telora-icon-512.png",
-        "../icons/telora-icon2-192.png"
+        "./static/icons/telora-icon-192.png",
+        "./static/icons/telora-icon-512.png",
+        "./static/icons/telora-icon2-192.png"
 
     ]
 }
