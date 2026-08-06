@@ -68,7 +68,7 @@ async function get_updates(token, database) {
             type = "image";
             fileId = update.message.photo.at(-1).file_id;
             message = await getFileUrl(token, fileId);
-            console.log(message);
+            //console.log(message);
             
         } else if (update.message.video) {
             
@@ -125,11 +125,11 @@ async function get_updates(token, database) {
         
         const bblop = await helper.get_current_chat();
         
-        console.log(`current chat: ${bblop} && from id : ${from_id}`);
+        //console.log(`current chat: ${bblop} && from id : ${from_id}`);
         
         if (chatModalOverlay.classList.contains("active") && String(from_id) === String(bblop)) {
             
-            console.log("updating ui");
+            //console.log("updating ui");
             
             await helper.renderMessages(newMessage, database);
         }
@@ -143,7 +143,7 @@ async function get_updates(token, database) {
 
 
 async function send_message(type, chatId, message, caption="") {
-    console.log("send_message called", type, chatId, message);
+    //console.log("send_message called", type, chatId, message);
     
     const form = new FormData();
     const token = localStorage.getItem("bot_token");
@@ -199,7 +199,7 @@ async function send_message(type, chatId, message, caption="") {
     
             }
             
-            console.log(rop.result);
+            //console.log(rop.result);
            
            newMessage.message_id = rop.result.message_id;
            
@@ -256,7 +256,7 @@ async function send_message(type, chatId, message, caption="") {
            
        }
         
-        console.log(rop);
+        //console.log(rop);
         
     }else if(type === "video"){
         form.append("chat_id", chatId);
@@ -287,7 +287,7 @@ async function send_message(type, chatId, message, caption="") {
             const state = document.querySelector(`[data-message-id="${newMessage.message_id}"]`);
             
             if (state) {
-                console.log("stete is avail");
+                //console.log("stete is avail");
                 const icon = state.querySelector("i");
                 icon.className = "fa-solid fa-check";
                 
@@ -304,7 +304,7 @@ async function send_message(type, chatId, message, caption="") {
            await nuser_db.insert("messages", messages, "message_data");
            
        }        
-        console.log(rop);
+        //console.log(rop);
         
     }else if(type === "audio"){
         form.append("chat_id", chatId);
@@ -324,19 +324,19 @@ async function send_message(type, chatId, message, caption="") {
         });
         
         const rop = await res.json();
-        console.log(rop);
+        //console.log(rop);
         
        if (rop.ok) {
            
            const fileId = rop.result.voice.file_id;
-           console.log(fileId);
+           //console.log(fileId);
            
            const a_url = await getFileUrl(token, fileId);
            
             const state = document.querySelector(`[data-message-id="${newMessage.message_id}"]`);
             
             if (state) {
-                console.log("stete is avail");
+                //console.log("stete is avail");
                 const icon = state.querySelector("i");
                 icon.className = "fa-solid fa-check";
                 

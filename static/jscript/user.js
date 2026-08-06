@@ -11,7 +11,7 @@ const user_db = new user_dataset("telora_user_db");
 
 let fri_hash = localStorage.getItem("fri_hash") || null;
 
-console.log(user_botoken);
+//console.log(user_botoken);
 
 
 async function telora_user(modal, input_l, t_div, f_name, username, container) {
@@ -19,7 +19,7 @@ async function telora_user(modal, input_l, t_div, f_name, username, container) {
         helper.showRegisterModal(modal);
         input_l.focus();
        await get_token(modal, t_div, input_l, f_name, username, container);
-        console.log("no token");
+        //console.log("no token");
     }else{
         const data = await user_db.select_from("user", "user_data");
         f_name.textContent = data.first_name;
@@ -55,24 +55,24 @@ async function hash(text) {
 
 async function sync_cache(container) {
     
-    console.log("Syncing cache");
+    //console.log("Syncing cache");
     const fris = await user_db.select_from("friends", "friend_data");
-    console.log(JSON.stringify(fris));
+   // console.log(JSON.stringify(fris));
     
     const hashed = await hash(JSON.stringify(fris));
     
-    console.log(hashed);
+    //console.log(hashed);
     
     
     if(hashed === fri_hash){
-        console.log("unique cache");
+        //console.log("unique cache");
         return;
     }else{
         
         fri_hash = hashed;
         await helper.renderFriendList(container, user_db);
         
-        console.log(fri_hash);
+        //console.log(fri_hash);
         
         localStorage.setItem("fri_hash", hashed);
     }
@@ -112,9 +112,9 @@ async function get_token(modal, t_div, token, f_name, username, container) {
                 await sync_cache(container);
             });
             
-            console.log(b_data);
+            //console.log(b_data);
         }else{
-            console.log(result);
+            //console.log(result);
         }
 
     });
