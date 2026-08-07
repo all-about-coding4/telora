@@ -3,19 +3,19 @@
 const CACHE = "telora";
 
 const FILES = [
-  "./",
-  "./index.html",
-  "./static/jsons/manifest.json",
+  "/",
+  "/index.html",
+  "/manifest.json",
 
-  "./static/style/telora1.css",
+  "/static/style/telora1.css",
 
-  "./static/jscript/helper.js",
-  "./static/jscript/user.js",
-  "./static/jscript/watchdog.js",
+  "/static/jscript/helper.js",
+  "/static/jscript/user.js",
+  "/static/jscript/watchdog.js",
 
-  "./static/icons/telora-icon-192.png",
-  "./static/icons/telora-icon-512.png",
-  "./static/icons/telora-icon2-192.png"
+  "/static/icons/telora-icon-192.png",
+  "/static/icons/telora-icon-512.png"
+  "/static/icons/telora-icon2-192.png"
 ];
 
 self.addEventListener("install", event => {
@@ -49,11 +49,19 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   console.log("Request:", event.request.url);
 
+  (async () => {
+  const cache = await caches.open("telora");
+  const keys = await cache.keys();
+
+  keys.forEach(k => console.log(k.url));
+})();
+
   if (event.request.mode === "navigate") {
 
     event.respondWith((async () => {
 
       const cached = await caches.match("./index.html");
+      console.log("Navigation cache:", cached);
 
       if (cached) return cached;
 
@@ -124,9 +132,4 @@ async function updateApplication(versionInfo) {
 
 }
 
-(async () => {
-  const cache = await caches.open("telora");
-  const keys = await cache.keys();
 
-  keys.forEach(k => console.log(k.url));
-})();
