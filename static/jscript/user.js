@@ -4,7 +4,7 @@ import user_dataset from "../dataset-src/index.js";
 
 import watch_dog from "./watchdog.js";
 
-let user_botoken = localStorage.getItem("bot_token");
+let user_botoken = localStorage.getItem("bot_token") || "";
 //localStorage.clear();
 
 const user_db = new user_dataset("telora_user_db");
