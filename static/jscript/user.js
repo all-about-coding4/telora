@@ -29,14 +29,23 @@ async function telora_user(modal, input_l, t_div, f_name, username, container) {
         await helper.renderRecent(user_db);
         
         //await sync_cache(container);
-        await watch_dog.runEverySecond(async () => {
-            await telegramApi.get_updates(user_botoken, user_db);
-        });
         
         await watch_dog.runEverySecond(async () => {
             await sync_cache(container);
     
         });
+
+       if (!navigator.onLine) {
+
+         console.log("Offline - skipping Telegram sync");
+
+         return;
+       }
+
+    await watch_dog.runEverySecond(async () => {
+            await telegramApi.get_updates(user_botoken, user_db);
+        });
+        
     }
     
 }
@@ -106,11 +115,20 @@ async function get_token(modal, t_div, token, f_name, username, container) {
             helper.hideRegisterModal(modal);
             user_botoken = b_token;
             localStorage.setItem("bot_token", user_botoken);
-            await watch_dog.runEverySecond(async () => { await telegramApi.get_updates(b_token, user_db) });
-            
+                        
             await watch_dog.runEverySecond(async () => {
                 await sync_cache(container);
             });
+
+            if (!navigator.onLine) {
+
+         console.log("Offline - skipping Telegram sync");
+
+         return;
+       }
+
+            await watch_dog.runEverySecond(async () => { await telegramApi.get_updates(b_token, user_db) });
+
             
             //console.log(b_data);
         }
