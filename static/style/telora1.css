@@ -2,6 +2,10 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+     touch-action: manipulation; 
     }
 
     html, body {
@@ -12,9 +16,7 @@
       font-size: 16px;
       color: #1e1e2a;
       overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
-      -ms-user-select: none;
+      touch-action: manipulation;
     }
 
     /* ========== TWO-COLUMN LAYOUT (desktop first) ========== */
