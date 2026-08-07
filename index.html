@@ -175,7 +175,7 @@
     if(internet_status.connected){
         await t_user.telora_user(registerModal, botoken_div, registerBtn, f_name, username, container);
         connect_status.innerHTML = `<i class="fas fa-circle" style="color: green;"> </i>${internet_status.connection}`;
-        await watchdog.runEverySecond(await checkForUpdates(), 1000 * 60 * 2);
+        await watchdog.runEverySecond(checkForUpdates, 1000 * 60 * 2);
     }else{
         connect_status.innerHTML = `<i class="fas fa-circle" style="color: red;"> </i>${internet_status.connection}`;
     }
@@ -271,7 +271,7 @@ telora_logo.addEventListener("click", ()=> {
   location.reload();
 });
 
-async function checkForUpdates(updateButton){
+async function checkForUpdates(){
 
   try{
 
