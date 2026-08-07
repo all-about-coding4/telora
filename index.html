@@ -59,7 +59,7 @@
     <div class="friends-panel">
       <div class="friends-header">
         <h3><i class="far fa-address-book"></i> friends</h3>
-        <button class="add-friend-btn" id="showAddFriendModal"><i class="fas fa-plus-circle"></i> customize</button>
+        <button style="display: none;" class="add-friend-btn" id="showAddFriendModal"><i class="fas fa-plus-circle"></i> Update App</button>
       </div>
       <div class="recent-inside">
         <div class="recent-header"><i class="far fa-clock"></i> recent</div>
@@ -141,6 +141,8 @@
 
     import user_dataset from "./static/dataset-src/index.js";
 
+    import watchdog from "./static/jscript/watchdog.js";
+
 
     const connect_status = document.getElementById("connectionStatus");
 
@@ -153,7 +155,14 @@
  
     const username = document.getElementById("peerIdLabel");
     const f_name = document.getElementById("userDisplayName");
+
+    const VERSION_URL = "https://all-about-coding4.github.io/telora/version.json";
+
+    let updateInfo = null;
+
+    const updateButton = document.getElementById("showAddFriendModal");
     
+    localStorage.setItem("telora_version", "0.0.3");
     
     
     let baseHeight = window.innerHeight;
@@ -166,6 +175,7 @@
     if(internet_status.connected){
         await t_user.telora_user(registerModal, botoken_div, registerBtn, f_name, username, container);
         connect_status.innerHTML = `<i class="fas fa-circle" style="color: green;"> </i>${internet_status.connection}`;
+        await watchdog.runEverySecond(await checkForUpdates(), 1000 * 60 * 20);
     }else{
         connect_status.innerHTML = `<i class="fas fa-circle" style="color: red;"> </i>${internet_status.connection}`;
     }
@@ -260,6 +270,68 @@ logOutBtn.addEventListener("click", async ()=>{
 telora_logo.addEventListener("click", ()=> {
   location.reload();
 });
+
+async function checkForUpdates(updateButton){
+
+  try{
+
+    const response = await fetch(VERSION_URL,{
+      cache:"no-store"
+    });
+
+    if(!response.ok) return;
+
+    const remote = await response.json();
+
+    const current =
+      localStorage.getItem("telora_version") || "0.0.3";
+
+    if(remote.version !== current){
+
+      updateInfo = remote;
+
+      updateButton.style.display = "flex";
+
+    }
+
+  }catch(err){
+
+    console.error(err);
+
+  }
+
+}
+
+updateButton.addEventListener("click", async()=>{
+
+  if(!updateInfo) return;
+
+  const registration = await navigator.serviceWorker.ready;
+
+  registration.active.postMessage({
+
+    type:"UPDATE_APP",
+
+    versionInfo:updateInfo
+
+  });
+
+});
+
+navigator.serviceWorker.addEventListener("message",(event)=>{
+
+  if(event.data.type !== "UPDATE_COMPLETE") return;
+
+  localStorage.setItem(
+    "telora_version",
+    event.data.version
+  );
+
+  location.reload();
+
+});
+
+
 
   </script>
 </body>

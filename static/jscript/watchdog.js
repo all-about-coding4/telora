@@ -1,4 +1,4 @@
-function runEverySecond(task) {
+function runEverySecond(task, interval = 1000) {
   let timeoutId;
   
   const runner = () => {
@@ -9,11 +9,11 @@ function runEverySecond(task) {
         console.error('Task error:', err);
       }
       runner(); // schedule next
-    }, 1000);
+    }, interval);
   };
   
   runner(); // start immediately
-  console.log("watch dog is running...")
+  console.log(`watch dog is running... every ${interval}ms`);
   return () => clearTimeout(timeoutId);
 }
 

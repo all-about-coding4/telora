@@ -1,0 +1,21 @@
+{
+    "VERSION": "O.0.3",
+    "BASE_URL": "https://all-about-coding4.github.io/telora/",
+    "FILES": [
+        "../../",
+        "../../index.html",
+        "../jsons/manifest.json",
+  
+        "../style/telora1.css",
+
+        "./helper.js",
+
+        "./user.js",
+        "./watchdog.js",
+  
+        "../icons/telora-icon-192.png",
+        "../icons/telora-icon-512.png",
+        "../icons/telora-icon2-192.png"
+
+    ]
+}
