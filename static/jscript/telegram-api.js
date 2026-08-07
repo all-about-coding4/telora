@@ -6,6 +6,12 @@ let lastUpdateId = Number(localStorage.getItem("last_update_id")) || 0;
 const nuser_db = new user_dataset("telora_user_db");
 
 async function validate_token(token) {
+    if (!navigator.onLine) {
+
+    console.log("Offline - skipping Telegram sync");
+
+    return;
+    }
     const data = await fetch(`https://api.telegram.org/bot${token}/getMe`);
     
     const result = await data.json();
@@ -20,6 +26,13 @@ async function validate_token(token) {
 }
 
 async function getFileUrl(token, fileId) {
+    if (!navigator.onLine) {
+
+    console.log("Offline - skipping Telegram sync");
+
+    return;
+    }
+    
     const response = await fetch(
         `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`
     );
@@ -32,6 +45,13 @@ async function getFileUrl(token, fileId) {
 }
 
 async function get_updates(token, database) {
+
+    if (!navigator.onLine) {
+
+    console.log("Offline - skipping Telegram sync");
+
+    return;
+    }
     const result = await fetch(
         `https://api.telegram.org/bot${token}/getUpdates?offset=${lastUpdateId}&timeout=25`
     );
@@ -174,6 +194,13 @@ async function send_message(type, chatId, message, caption="") {
         input.value = "";
         
         input.dispatchEvent(new Event("input"));
+
+        if (!navigator.onLine) {
+
+    console.log("Offline - skipping Telegram sync");
+
+    return;
+        }
         
        const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
            method: "POST",
@@ -222,6 +249,13 @@ async function send_message(type, chatId, message, caption="") {
         newMessage.type = "image";
         
         await helper.renderMessages(newMessage, nuser_db, "pending");
+
+        if (!navigator.onLine) {
+
+    console.log("Offline - skipping Telegram sync");
+
+    return;
+        }
         
         const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`,
         {
@@ -269,6 +303,13 @@ async function send_message(type, chatId, message, caption="") {
         newMessage.type = "video";
         
         await helper.renderMessages(newMessage, nuser_db, "pending");
+
+        if (!navigator.onLine) {
+
+    console.log("Offline - skipping Telegram sync");
+
+    return;
+        }
         
         const res = await fetch(`https://api.telegram.org/bot${token}/sendVideo`,
         {
@@ -316,7 +357,13 @@ async function send_message(type, chatId, message, caption="") {
         newMessage.type = "audio";
         
         await helper.renderMessages(newMessage, nuser_db, "pending");        
-        
+
+        if (!navigator.onLine) {
+
+    console.log("Offline - skipping Telegram sync");
+
+    return;
+        }
         const res = await fetch(`https://api.telegram.org/bot${token}/sendVoice`,
         {
             method: "POST",
