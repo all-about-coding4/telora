@@ -1,5 +1,3 @@
-
-
 const CACHE = "telora";
 
 const FILES = [
@@ -14,20 +12,26 @@ const FILES = [
   "/static/jscript/watchdog.js",
 
   "/static/icons/telora-icon-192.png",
-  "/static/icons/telora-icon-512.png"
+  "/static/icons/telora-icon-512.png",
   "/static/icons/telora-icon2-192.png"
 ];
 
+// INSTALL
 self.addEventListener("install", event => {
 
-  event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(FILES))
-  );
+  event.waitUntil((async () => {
+
+    const cache = await caches.open(CACHE);
+
+    await cache.addAll(FILES);
+
+  })());
 
   self.skipWaiting();
 
 });
 
+// ACTIVATE
 self.addEventListener("activate", event => {
 
   event.waitUntil((async () => {
@@ -46,48 +50,66 @@ self.addEventListener("activate", event => {
 
 });
 
+// FETCH
 self.addEventListener("fetch", event => {
+
   console.log("Request:", event.request.url);
 
-  (async () => {
-  const cache = await caches.open("telora");
-  const keys = await cache.keys();
-
-  keys.forEach(k => console.log(k.url));
-})();
-
+  // HTML page navigation
   if (event.request.mode === "navigate") {
 
     event.respondWith((async () => {
 
-      const cached = await caches.match("./index.html");
+      const cached =
+        await caches.match("/") ||
+        await caches.match("/index.html");
+
       console.log("Navigation cache:", cached);
 
       if (cached) return cached;
 
-      return fetch(event.request);
+      try {
+        return await fetch(event.request);
+      } catch (err) {
+        return new Response("Offline", {
+          status: 503,
+          headers: {
+            "Content-Type": "text/plain"
+          }
+        });
+      }
 
     })());
 
     return;
-  }
-  
 
+  }
+
+  // Other assets
   event.respondWith((async () => {
 
     const cached = await caches.match(event.request);
 
     if (cached) return cached;
 
-    return fetch(event.request);
+    try {
+
+      return await fetch(event.request);
+
+    } catch (err) {
+
+      return Response.error();
+
+    }
 
   })());
 
 });
 
+// UPDATE MESSAGE
 self.addEventListener("message", event => {
 
-  if (event.data.type === "UPDATE_APP") {
+  if (event.data?.type === "UPDATE_APP") {
 
     event.waitUntil(updateApplication(event.data.versionInfo));
 
@@ -95,6 +117,7 @@ self.addEventListener("message", event => {
 
 });
 
+// UPDATE CACHE
 async function updateApplication(versionInfo) {
 
   const cache = await caches.open(CACHE);
@@ -110,9 +133,7 @@ async function updateApplication(versionInfo) {
     });
 
     if (!response.ok) {
-
       throw new Error("Failed: " + file);
-
     }
 
     await cache.put(file, response.clone());
@@ -132,4 +153,15 @@ async function updateApplication(versionInfo) {
 
 }
 
+// DEBUG (remove later)
+(async () => {
 
+  const cache = await caches.open(CACHE);
+
+  const keys = await cache.keys();
+
+  console.log("===== CACHE CONTENTS =====");
+
+  keys.forEach(key => console.log(key.url));
+
+})();
