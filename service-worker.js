@@ -47,6 +47,7 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
+  console.log("Request:", event.request.url);
 
   if (event.request.mode === "navigate") {
 
@@ -122,3 +123,10 @@ async function updateApplication(versionInfo) {
   });
 
 }
+
+(async () => {
+  const cache = await caches.open("telora");
+  const keys = await cache.keys();
+
+  keys.forEach(k => console.log(k.url));
+})();
