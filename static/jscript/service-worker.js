@@ -48,6 +48,22 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
 
+  if (event.request.mode === "navigate") {
+
+    event.respondWith((async () => {
+
+      const cached = await caches.match("/index.html");
+
+      if (cached) return cached;
+
+      return fetch(event.request);
+
+    })());
+
+    return;
+  }
+  
+
   event.respondWith((async () => {
 
     const cached = await caches.match(event.request);
