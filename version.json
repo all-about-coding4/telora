@@ -2,6 +2,7 @@
     "VERSION": "O.0.3",
     "BASE_URL": "https://all-about-coding4.github.io/telora/",
     "FILES": [
+<<<<<<< HEAD
         "./",
         "./index.html",
         "./static/jsons/manifest.json",
@@ -16,6 +17,22 @@
         "./static/icons/telora-icon-192.png",
         "./static/icons/telora-icon-512.png",
         "./static/icons/telora-icon2-192.png"
+=======
+        "../../",
+        "../../index.html",
+        "../jsons/manifest.json",
+  
+        "../style/telora1.css",
+
+        "./helper.js",
+
+        "./user.js",
+        "./watchdog.js",
+  
+        "../icons/telora-icon-192.png",
+        "../icons/telora-icon-512.png",
+        "../icons/telora-icon2-192.png"
+>>>>>>> a6d38c1 (vak)
 
     ]
 }
