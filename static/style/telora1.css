@@ -968,38 +968,172 @@
 
     /* Alex */
 
-    .msg-action-btn {
-      display: none;
-      position: absolute;
-      padding:8px 4px ;
-      border-radius: 5px;
-      align-items: center;
-      gap: 1rem;
-      width: fit-content;
-      max-width: 100%;
-      padding-left: 9px;
-      padding-right: 9px;
-      margin-top: 6px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-    }
+    /* ===== BASE ACTION BUTTON ===== */
+.msg-action-btn {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 10px);  /* positions above the message */
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  padding: 6px 12px;
+  border-radius: 40px;        /* pill shape for modern look */
+  align-items: center;
+  gap: 0.75rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #1e293b;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+}
 
-    .other .msg-action-btn{
-      background: #0084ff;
-      color: whitesmoke;
-    }
+/* ===== ACTIVE STATE ===== */
+.msg-action-btn.active {
+  display: flex;
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
 
-    .me .msg-action-btn{
-      background: whitesmoke;
-      color: black;
-    }
+/* ===== THEME: OTHER (incoming) ===== */
+.other .msg-action-btn {
+  background: rgba(0, 132, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 8px 30px rgba(0, 132, 255, 0.3), 0 2px 6px rgba(0, 0, 0, 0.1);
+}
 
-    .msg-action-btn.active {
-      display: flex;
-    }
+/* ===== THEME: ME (outgoing) ===== */
+.me .msg-action-btn {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
 
-   .msg-action-btn i:hover{
-    font-size: 20px;
-   }
+/* ===== ICONS ===== */
+.msg-action-btn i {
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+
+/* Hover effect for icons */
+.msg-action-btn i:hover {
+  transform: scale(1.2);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+/* Different hover for "me" theme */
+.me .msg-action-btn i:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+/* ===== ADD A SMALL POINTER ARROW (optional) ===== */
+.msg-action-btn::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: inherit;  /* will be set by theme */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.other .msg-action-btn::after {
+  border-top-color: rgba(0, 132, 255, 0.92);
+}
+
+.me .msg-action-btn::after {
+  border-top-color: rgba(255, 255, 255, 0.92);
+}
+
+/* ============================================================
+   DARK MODE OVERRIDES
+   ============================================================ */
+body.dark {
+  background: #0f172a !important;
+}
+
+/* ---- Dark: "other" (incoming) ---- */
+body.dark .other .msg-action-btn {
+  background: rgba(37, 99, 235, 0.92) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.35), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.dark .other .msg-action-btn::after {
+  border-top-color: rgba(37, 99, 235, 0.92);
+}
+
+body.dark .other .msg-action-btn i:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* ---- Dark: "me" (outgoing) ---- */
+body.dark .me .msg-action-btn {
+  background: #1e293b !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+body.dark .me .msg-action-btn::after {
+  border-top-color: #1e293b;
+}
+
+body.dark .me .msg-action-btn i:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+
+/* ---- (optional) small screen adjustments ---- */
+@media (max-width: 480px) {
+  .msg-action-btn {
+    padding: 4px 10px;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 30px;
+  }
+  .msg-action-btn i {
+    font-size: 1rem;
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+}
 
 
    /* DARK MODE OVERRIDESS */
