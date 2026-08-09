@@ -409,6 +409,12 @@ async function openChatModal(room, friendName, user_db) {
   const user_data = await user_db.select_from("user", "user_data");
   
   document.getElementById("chatFriendName").innerText = friendName;
+
+  const fri_data = await user_db.select_from("friends", "friend_data");
+
+  const fr_d = fri_data[room];
+
+  document.getElementById("dateDisplay").innerText = formatTelegramDate(fr_d.addedAt);
   
   const avatar = document.getElementById("chatAvatar");
   avatar.textContent = friendName.charAt(0).toUpperCase();
@@ -541,8 +547,12 @@ function addRecent(room, username, user_db) {
 
 
 async function loadMessages(room, user_db) {
-  messageContainer.innerHTML = '';
+  //messageContainer.innerHTML = '';
   
+  const wrappers = messageContainer.querySelectorAll(".message-wrapper");
+
+  wrappers.forEach(el => el.remove());
+
   const msg_data = await user_db.select_from("messages", "message_data");
   
   const roomMessages = msg_data[room] || [];

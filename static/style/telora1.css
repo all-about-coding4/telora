@@ -1092,15 +1092,13 @@
   /* 👇 This padding pushes the first message DOWN */
   padding: 12px 0 16px 0;   /* top: breathing, bottom: pushes messages */
 
-  /* Sticky behavior – sticks to top of the scrollable container */
-  position: sticky;
-  top: 6px;                 /* small gap from top edge (adjust to taste) */
-  z-index: 5;
 
   pointer-events: none;     /* lets clicks pass through to messages */
   background: transparent;
 
   flex-shrink: 0;
+  width: 100%;
+  min-height: 48px;
 
 }
 
