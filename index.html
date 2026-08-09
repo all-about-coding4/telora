@@ -17,7 +17,7 @@
  </head>
 <body>
      <div class="chat">
-    <!-- RIGHT PANEL: global header only -->
+    <!-- RIGHT PANEL: globald header only -->
     <div class="main-panel">
       <div class="chat-header">
         <span class="header-title" id="imgBtn"><img src="./static/icons/telora-icon-512.png"></span>
@@ -71,7 +71,7 @@
     </div>
   </div>
 
-  <!-- CHAT MODALl (Telegram-style overlay) -->
+  <!-- CHAT MODALl (Telegram-style overlays) -->
   <div class="chat-modal-overlay" id="chatModalOverlay">
     <div class="chat-modal" id="chatModal">
 
@@ -88,7 +88,18 @@
       </div>
 
 
-      <div class="messages-container" id="messageContainer"></div>
+      <div class="messages-container" id="messageContainer">
+        
+        <div class="chat-date-chip" id="addedDateChip">
+          <div class="date-pill">
+          <i class="fas fa-calendar-alt"></i>
+          <span id="dateDisplay">Loading...</span>
+          </div>
+        </div>
+
+      </div>
+
+
       <div class="input-bar">
         <input type="file" id="imageUpload" accept="image/*">
         <button class="attach-btn" id="attachImageBtn"><i class="far fa-image"></i></button>

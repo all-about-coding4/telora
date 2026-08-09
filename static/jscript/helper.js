@@ -6,7 +6,7 @@ const ss_button = document.getElementById("sendMessageBtn");
 
 const audioPicker = document.getElementById("audioPicker");
 
-// Open the picker
+// Open the picker w
 function openAudioPicker() {
   audioPicker.value = ""; // Optional: allows selecting the same file again
   audioPicker.click();
@@ -206,8 +206,13 @@ msgContainer.addEventListener("click", async (e) => {
 
     if (pressCount === 2) {
 
-        actionBtn.classList.toggle("active");
+      const wasActive = actionBtn.classList.contains("active");
 
+      document.querySelectorAll(".msg-action-btn.active").forEach(btn=> btn.classList.remove("active"));
+
+      if (!wasActive){
+        actionBtn.classList.add("active");
+      }
         pressCount = 0;
 
         console.log("Double click");
@@ -216,7 +221,7 @@ msgContainer.addEventListener("click", async (e) => {
 
     console.log(`Clicked count: ${pressCount}`);
 });
-
+//s
 
 async function renderMessages(messages, user_db, state="") {
   if (!Array.isArray(messages)) {
@@ -240,16 +245,16 @@ async function renderMessages(messages, user_db, state="") {
         <div class="message-bubble" data-msg-id="${msg.message_id}"> 
 
           <div class="bubble-content">  
-            <span class="message-text" data-temp-msg="${msg.message}">${formatMessagePreview(msg.message)}</span>  
+            <span class="message-text" data-temp-msg="${escapeHTML(msg.message)}">${formatMessagePreview(msg.message)}</span>  
             <span class="timestamp">${formatTelegramDate(timeStr)} <span data-message-id="${msg.message_id}"><i class="fa-solid ${state === "pending" ? "fa-clock" : "fa-check"}"></i></span></span>  
-          </div>
+          </div> 
 
           <div class="msg-action-btn">
             <i class="fa-solid fa-reply" data-action="reply"></i>
             <i class="fa-solid fa-copy" data-action="copy"></i>
             <i class="fa-solid fa-pen" data-action="edit"></i>
             <i class="fa-solid fa-trash" data-action="delete"></i>
-          </div> 
+          </div>
 
         </div>
 
@@ -600,8 +605,12 @@ messageContainer.addEventListener("click", function(e) {
   const btn = e.target.closest(".see-more");
   if (!btn) return;
 
-  const textEl = btn.closest(".message-text");
-  const fullText = textEl.dataset.full;
+  const bubble = btn.closest(".message-bubble");
+  if(!bubble) return;
+
+
+  const textEl = bubble.querySelector(".message-text");
+  const fullText = textEl.dataset.tempMsg;
 
   if (btn.dataset.expanded === "true") {
     // collapse

@@ -19,7 +19,7 @@
       touch-action: manipulation;
     }
 
-    /* ========== TWO-COLUMN LAYOUT (desktop first) ========== */
+    /* ========== TWO-COLUMN LAYOUT (desktop firstk) ========== */
     .chat {
       display: flex;
       flex-direction: row;
@@ -394,7 +394,7 @@
     }
 
     .chat-modal-header {
-      position: sticky;
+      position: relative;
       top: 0;
       background: inherit;
       padding: 1rem 1.5rem;
@@ -426,6 +426,7 @@
       background: #fafcff;
       display: flex;
       flex-direction: column;
+      overflow-x: visible;
       min-height: 0;
       gap: 0.8rem;
       scrollbar-width: thin;
@@ -994,11 +995,11 @@
   transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.2s ease;
   opacity: 0;
   pointer-events: none;
-  z-index: 10;
   white-space: nowrap;
 }
 
-/* ===== ACTIVE STATE ===== */
+
+/* ===== ACTIVE STATE s===== */
 .msg-action-btn.active {
   display: flex;
   opacity: 1;
@@ -1075,12 +1076,84 @@
   border-top-color: rgba(255, 255, 255, 0.92);
 }
 
+/* Alex date*/
+
+/* ============================================================
+   DATE CHIP – tailored for your relative header
+   ============================================================ */
+
+/* ----- The wrapper: pushes messages down & sticks to top ----- */
+.chat-date-chip {
+  /* Force visibility (overrides any display:none) */
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+
+  /* 👇 This padding pushes the first message DOWN */
+  padding: 12px 0 16px 0;   /* top: breathing, bottom: pushes messages */
+
+  /* Sticky behavior – sticks to top of the scrollable container */
+  position: sticky;
+  top: 6px;                 /* small gap from top edge (adjust to taste) */
+  z-index: 5;
+
+  pointer-events: none;     /* lets clicks pass through to messages */
+  background: transparent;
+
+  flex-shrink: 0;
+
+}
+
+/* ----- The pill itself (the visible bubble) ----- */
+.chat-date-chip .date-pill {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 5px 18px;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #54656f;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+}
+
+.chat-date-chip .date-pill i {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  color: inherit;
+}
+
+/* ===== DARK MODE ===== */
+body.dark .chat-date-chip .date-pill {
+  background: rgba(30, 44, 52, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #aebac1;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+body.dark .chat-date-chip .date-pill i {
+  opacity: 0.5;
+}
+
+
+
 /* ============================================================
    DARK MODE OVERRIDES
    ============================================================ */
 body.dark {
   background: #0f172a !important;
 }
+
 
 /* ---- Dark: "other" (incoming) ---- */
 body.dark .other .msg-action-btn {

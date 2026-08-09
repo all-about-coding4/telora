@@ -146,12 +146,13 @@ async function get_updates(token, database) {
                     friends[from_id] = {
                         id: from_id,
                         first_name: update.message.from.first_name,
-                        username: update.message.from.username
+                        username: update.message.from.username,
+                        addedAt: update.message.date
                     };
                     await database.insert("friends", friends, "friend_data");
                 }
 
-                // Create message list for this user
+                // Create message list for this users
                 if (!messages[from_id]) {
                     messages[from_id] = [];
                 }
