@@ -71,24 +71,28 @@
     </div>
   </div>
 
-  <!-- CHAT MODAL (Telegram-style overlay) -->
+  <!-- CHAT MODALl (Telegram-style overlay) -->
   <div class="chat-modal-overlay" id="chatModalOverlay">
     <div class="chat-modal" id="chatModal">
+
+      <!--Header-->
       <div class="chat-modal-header">
         <div class="chat-user">
           <div class="chat-avatar" id="chatAvatar">A</div>
           <h3 id="chatFriendName"></h3>
         </div>
-        <button class="close-modal-btn" id="closeChatModal"><i class="fas fa-times"></i></button>
-      </div>
-      <span id="typingIndicatorHeader" class="typing-status" style="display: block;">
+        <span id="typingIndicatorHeader" class="typing-status" style="display: block;">
         last seen recently
       </span>
+        <button class="close-modal-btn" id="closeChatModal"><i class="fas fa-times"></i></button>
+      </div>
+
+
       <div class="messages-container" id="messageContainer"></div>
       <div class="input-bar">
         <input type="file" id="imageUpload" accept="image/*">
         <button class="attach-btn" id="attachImageBtn"><i class="far fa-image"></i></button>
-        <input type="text" id="messageInput" placeholder="type a message">
+        <textarea id="messageInput" placeholder="type a message"></textarea>
         <input type="file" id="audioPicker" accept="*/*" hidden>
         <button class="send-btn" id="sendMessageBtn"><i class="fa-solid fa-microphone" id="sendIcon"></i></button>
       </div>
@@ -158,7 +162,7 @@
     const username = document.getElementById("peerIdLabel");
     const f_name = document.getElementById("userDisplayName");
 
-    const VERSION_URL = "/version.json";
+    const VERSION_URL = "https://raw.githubusercontent.com/all-about-coding4/telora/main/version.json";
 
     let updateInfo = null;
 
@@ -187,12 +191,20 @@
   const icon_ic = document.getElementById("sendIcon");
 
 input_txt.addEventListener("input", () => {
+  input_txt.style.height = "45px";
+
   if (input_txt.value.trim()) {
     icon_ic.className = "fa-solid fa-paper-plane";
   } else {
     icon_ic.className = "fa-solid fa-microphone";
   }
+
+  if(input_txt.scrollHeight > input_txt.clientHeight){
+    input_txt.style.height = Math.min(input_txt.scrollHeight, 150) + "px";
+  }
+
 });
+
 
 
  // Theme Toggle
@@ -253,7 +265,7 @@ adjustLayout();
 
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./service-worker.js", {"scope": "/"});
+  navigator.serviceWorker.register("./service-worker.js");
 }
 
 

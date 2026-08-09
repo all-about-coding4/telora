@@ -293,7 +293,6 @@
       backdrop-filter: blur(4px);
       align-items: center;
       justify-content: center;
-      z-index: 3000;
     }
     .chat-modal-overlay.active {
       display: flex;
@@ -395,7 +394,7 @@
     }
 
     .chat-modal-header {
-      position: sticky !important;
+      position: sticky;
       top: 0;
       background: inherit;
       padding: 1rem 1.5rem;
@@ -450,6 +449,7 @@
       word-wrap: break-word;
       position: relative;
     }
+
     .me .message-bubble {
       background: #0084ff;
       color: #fff;
@@ -520,12 +520,23 @@
     }
     .attach-btn:hover, .send-btn:hover { background: #eef2f7; }
     #messageInput {
+      width: 100%;
+      resize: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      box-sizing: border-box;
+
       flex: 1;
       border: none;
       background: #f2f5fa;
       border-radius: 30px;
       padding: 0.85rem 1.4rem;
       font-size: 1rem;
+      height: 45px;
+      max-height: 150px;
     }
     #messageInput:focus { outline: none; background: #e9eef6; }
     #imageUpload { display: none; }
@@ -538,7 +549,6 @@
       background: rgba(18, 20, 26, 0.94);
       justify-content: center;
       align-items: center;
-      z-index: 4000;
       backdrop-filter: blur(5px);
       overflow: hidden;
       transform: none;
@@ -564,7 +574,6 @@
       color: #fff;
       font-size: 3rem;
       opacity: 0.75;
-      z-index: 4001;
       transition: opacity 0.2s;
     }
     .lightbox-close:hover {
@@ -586,7 +595,6 @@
       align-items: center;
       gap: 12px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-      z-index: 5000;
       opacity: 0;
       transition: all 0.2s ease;
       pointer-events: none;
@@ -604,7 +612,6 @@
       background: rgba(0,0,0,0.3);
       align-items: center;
       justify-content: center;
-      z-index: 2000;
       backdrop-filter: blur(3px);
     }
     .modal.active { display: flex; }
@@ -745,6 +752,7 @@
         height: 100dvh;
         border-radius: 0;
       }
+
     }
 
     .chat-user {
@@ -899,7 +907,7 @@
       transition: opacity 0.2s ease;
       white-space: nowrap;
       font-weight: 500;
-      z-index: 10;
+  
     }
 
     .copy-feedback.show {
@@ -928,9 +936,7 @@
 
     /* Typing indicator in header */
     .typing-status {
-      position: absolute;
-      top: 70px; /* adjust depending on header height */
-      left: 50%;
+      position: relative;
       transform: translateX(-50%);
       max-width: 200px;
       width: fit-content;
@@ -943,8 +949,6 @@
       display: flex;
       align-items: center;
       gap: 0.3rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      z-index: 10;
       pointer-events: none;
     }
 
@@ -961,14 +965,60 @@
       50% { opacity: 1; }
       100% { opacity: 0.5; }
     }
-  </style>
 
-  <!-- NEW: Dark & Like Mode Overrides + Animations (does not replace original CSS) -->
-  <style>
-    /* DARK MODE OVERRIDES */
+    /* Alex */
+
+    .msg-action-btn {
+      display: none;
+      position: absolute;
+      padding:8px 4px ;
+      border-radius: 5px;
+      align-items: center;
+      gap: 1rem;
+      width: fit-content;
+      max-width: 100%;
+      padding-left: 9px;
+      padding-right: 9px;
+      margin-top: 6px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .other .msg-action-btn{
+      background: #0084ff;
+      color: whitesmoke;
+    }
+
+    .me .msg-action-btn{
+      background: whitesmoke;
+      color: black;
+    }
+
+    .msg-action-btn.active {
+      display: flex;
+    }
+
+   .msg-action-btn i:hover{
+    font-size: 20px;
+   }
+
+
+   /* DARK MODE OVERRIDESS */
     body.dark {
       background: #0f172a !important;
     }
+
+
+
+    body.dark .me .msg-action-btn {
+      background: #0f172a !important;
+      color: whitesmoke;
+    } 
+
+    body.dark .other .msg-action-btn {
+      background: #2563eb;
+      color: black;
+    }
+
     body.dark .friends-panel,
     body.dark .main-panel,
     body.dark .chat-header,
@@ -1034,10 +1084,21 @@
       background: #475569 !important;
     }
 
-    /* LIKE MODE OVERRIDES (vibrant) */
+    /* LIKE MODE OVERRIDES c(vibrant) */
     body.like {
       background: linear-gradient(135deg, #667eea, #764ba2) !important;
     }
+
+    body.like .me .msg-action-btn {
+      background: #fff9f0 !important;
+      color: #1e1a2f !important;
+    } 
+
+    body.like .other .msg-action-btn {
+      background: #ff6b6b !important;
+      color: white !important;
+    }
+
     body.like .friends-panel,
     body.like .main-panel,
     body.like .chat-header,

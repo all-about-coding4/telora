@@ -1,20 +1,21 @@
 {
-    "VERSION": "O.0.4",
-    "BASE_URL": "https://all-about-coding4.github.io/telora/",
+    "VERSION": "O.0.5",
+    "BASE_URL": "https://raw.githubusercontent.com/all-about-coding4/telora/main",
     "FILES": [
-        "./",
-        "./index.html",
-        "./static/jsons/manifest.json",
+        "/",
+        "/index.html",
+        "/static/jsons/manifest.json",
   
-        "./static/style/telora1.css",
+        "/static/style/telora1.css",
 
-        "./static/jscript/helper.js",
+        "/static/jscript/helper.js",
 
-        "./static/jscript/user.js",
-        "./watchdog.js",
+        "/static/jscript/user.js",
+        "/static/jscript/watchdog.js",
+        "/static/jscript/connection.js",
   
-        "./static/icons/telora-icon-192.png",
-        "./static/icons/telora-icon-512.png",
-        "./static/icons/telora-icon2-192.png"
+        "/static/icons/telora-icon-192.png",
+        "/static/icons/telora-icon-512.png",
+        "/static/icons/telora-icon2-192.png"
     ]
 }

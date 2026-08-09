@@ -18,42 +18,10 @@ const bot_username = document.getElementById("peerIdLabel");
 
 const copyBtnFeedBack = document.getElementById("copyFeedback");
 
-copyBtn.addEventListener("click", async ()=> {
-  const user_botoken = localStorage.getItem("bot_token");
 
-  if(!user_botoken){
-    console.log("no bot token");
-    return;
-  }
-
-  const user_db = new user_dataset("telora_user_db");
-
-  const data = await user_db.select_from("user", "user_data");
-  const url = `https://t.me/${data.username}/`;
-
-  await copyPeerId(url);
-});
-
-bot_username.addEventListener("click", async ()=> {
-  const user_botoken = localStorage.getItem("bot_token");
-
-  if(!user_botoken){
-    console.log("no bot token");
-    return;
-  }
-
-  const user_db = new user_dataset("telora_user_db");
-
-  const data = await user_db.select_from("user", "user_data");
-  const url = `https://t.me/${data.username}/`;
-
-  await copyPeerId(url);
-});
-
-async function copyPeerId(text) {
+async function copyText(text) {
 
   if (!text) {
-    showToast(toastMsg, toastEl, 'failed to copy', 'fa-circle-exclamation', 'fa-solid');
     return;
   }
 
@@ -82,10 +50,41 @@ function fallbackCopy(text) {
 }
 
 function showCopyFeedback() {
-  console.log("copy feedback")
-  copyBtnFeedBack.classList.add('show');
-  setTimeout(() => copyBtnFeedBack.classList.remove('show'), 1500);
+  console.log("copy feedback");
+  return;
 }
+
+copyBtn.addEventListener("click", async ()=> {
+  const user_botoken = localStorage.getItem("bot_token");
+
+  if(!user_botoken){
+    console.log("no bot token");
+    return;
+  }
+
+  const user_db = new user_dataset("telora_user_db");
+
+  const data = await user_db.select_from("user", "user_data");
+  const url = `https://t.me/${data.username}/`;
+
+  await copyText(url);
+});
+
+bot_username.addEventListener("click", async ()=> {
+  const user_botoken = localStorage.getItem("bot_token");
+
+  if(!user_botoken){
+    console.log("no bot token");
+    return;
+  }
+
+  const user_db = new user_dataset("telora_user_db");
+
+  const data = await user_db.select_from("user", "user_data");
+  const url = `https://t.me/${data.username}/`;
+
+  await copyText(url);
+});
 
 
 let recent_chat = safeParse(localStorage.getItem("recent_chat"), []);
@@ -125,6 +124,98 @@ function formatTelegramDate(unixTime) {
   });
 }
 
+const msgContainer = document.getElementById("messageContainer");
+let pressCount = 0;
+
+msgContainer.addEventListener("click", async (e) => {
+
+    console.log("Clicked:", e.target);
+
+    // 1. Check if an action icon was clicked
+
+    const icon = e.target.closest("[data-action]");
+
+    if (icon) {
+
+        const msgdiv = icon.closest(".message-bubble");
+
+        if (!msgdiv) return;
+
+        const msgId = msgdiv.dataset.msgId;
+        const action = icon.dataset.action;
+
+        if(action === "copy"){
+          const activeBtn =
+            document.querySelector(".msg-action-btn.active");
+          const msd = msgdiv.querySelector(".message-text");
+
+          const msg = msd.dataset.tempMsg;
+
+            if(activeBtn){
+              await copyText(msg);
+              activeBtn.classList.remove("active");
+              console.log(msd.textContent, msg);
+            }
+
+        }else if(action === "reply"){
+
+        }else if(action === "delete"){
+
+        }else if(action === "edit"){
+          
+        }
+
+        console.log("Copy:", msgId);
+        console.log(action)
+
+        pressCount = 0;
+
+        return;
+    }
+
+    // 2. Check if click is inside a message
+
+    const msgdiv = e.target.closest(".message-bubble");
+
+    if (!msgdiv) {
+
+        // Clicked outside a message
+        const activeBtn =
+            document.querySelector(".msg-action-btn.active");
+
+        if (activeBtn) {
+            activeBtn.classList.remove("active");
+        }
+
+        pressCount = 0;
+
+        return;
+    }
+
+    // 3. Clicked inside message
+
+    pressCount++;
+
+    const actionBtn =
+        msgdiv.querySelector(".msg-action-btn");
+
+    if (!actionBtn) return;
+
+
+    // 4. Double click
+
+    if (pressCount === 2) {
+
+        actionBtn.classList.toggle("active");
+
+        pressCount = 0;
+
+        console.log("Double click");
+    }
+
+
+    console.log(`Clicked count: ${pressCount}`);
+});
 
 
 async function renderMessages(messages, user_db, state="") {
@@ -145,12 +236,23 @@ async function renderMessages(messages, user_db, state="") {
 
     if (msg.type === 'text') {
       html += `<div class="${wrapperClass}">
-        <div class="message-bubble">  
+
+        <div class="message-bubble" data-msg-id="${msg.message_id}"> 
+
           <div class="bubble-content">  
-            <span class="message-text" data-full="${escapeHTML(msg.message)}">${formatMessagePreview(msg.message)}</span>  
+            <span class="message-text" data-temp-msg="${msg.message}">${formatMessagePreview(msg.message)}</span>  
             <span class="timestamp">${formatTelegramDate(timeStr)} <span data-message-id="${msg.message_id}"><i class="fa-solid ${state === "pending" ? "fa-clock" : "fa-check"}"></i></span></span>  
-          </div>  
-        </div>  
+          </div>
+
+          <div class="msg-action-btn">
+            <i class="fa-solid fa-reply" data-action="reply"></i>
+            <i class="fa-solid fa-copy" data-action="copy"></i>
+            <i class="fa-solid fa-pen" data-action="edit"></i>
+            <i class="fa-solid fa-trash" data-action="delete"></i>
+          </div> 
+
+        </div>
+
       </div>`;
     } else if (msg.type === "image") {
       html += `<div class="${wrapperClass}">  
@@ -478,53 +580,6 @@ function get_friend_list() {
     client.emit("myFriends", {user_id});
   }
 }
-
-
-
-// DOUBLE TAP HANDLER (TEXT ONLY)
-let lastTap = 0;
-
-messageContainer.addEventListener("click", function (e) {
-  const bubble = e.target.closest(".message-bubble");
-  if (!bubble) return;
-
-  const now = Date.now();
-  const diff = now - lastTap;
-
-  if (diff < 300 && diff > 0) {
-    // DOUBLE TAP DETECTED
-
-    // ✅ ONLY TEXT messages
-    const textEl = bubble.querySelector(".message-text");
-    if (!textEl) return; // ignore images
-
-    const text = textEl.innerText.trim();
-    if (!text) return;
-
-    // COPY
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
-    } else {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-    }
-
-    // ✅ ANIMATION (bubble)
-    bubble.classList.add("double-tap");
-    setTimeout(() => {
-      bubble.classList.remove("double-tap");
-    }, 250);
-
-    // ✅ TOAST (uses your existing function)
-    showToast(toastMsg, toastEl, "Message copied", "fa-copy", "fa-solid");
-  }
-
-  lastTap = now;
-});
 
 
 

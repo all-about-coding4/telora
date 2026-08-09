@@ -10,6 +10,8 @@ const FILES = [
   "/static/jscript/helper.js",
   "/static/jscript/user.js",
   "/static/jscript/watchdog.js",
+  "/static/jscript/connection.js",
+  "/static/jscript/telegram-api.js",
 
   "/static/icons/telora-icon-192.png",
   "/static/icons/telora-icon-512.png",
@@ -117,14 +119,14 @@ self.addEventListener("message", event => {
 
 });
 
-// UPDATE CACHE
+// UPDATE CACHE 
 async function updateApplication(versionInfo) {
 
   const cache = await caches.open(CACHE);
 
-  const base = versionInfo.base;
+  const base = versionInfo.BASE_URL;
 
-  const files = versionInfo.files || FILES;
+  const files = versionInfo.FILES || FILES;
 
   for (const file of files) {
 

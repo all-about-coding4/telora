@@ -201,7 +201,7 @@ async function send_message(type, chatId, message, caption = "") {
 
     let messages = await nuser_db.select_from("messages", "message_data") || {};
 
-    const tempId = crypto.randomUUID();
+    const tempId = "TEMP-MSG" + crypto.randomUUID();
 
     const data = await nuser_db.select_from("user", "user_data");
 
