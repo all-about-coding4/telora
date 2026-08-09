@@ -538,6 +538,8 @@
       font-size: 1rem;
       height: 45px;
       max-height: 150px;
+      position: sticky;
+      bottom: 0;
     }
     #messageInput:focus { outline: none; background: #e9eef6; }
     #imageUpload { display: none; }
