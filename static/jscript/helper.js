@@ -403,24 +403,23 @@ console.log("type:", typeof friends);
 
 function fitModalToViewport() {
   const overlay = document.querySelector('.chat-modal-overlay');
-  const modal = document.querySelector('.chat-modal');
-  if (!overlay || !modal) return;
-
-  // Use visualViewport if available, else fallback to window.innerHeight
-  const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  if (!overlay) return;
   
-  overlay.style.height = height + 'px';
-  overlay.style.maxHeight = height + 'px';
-  modal.style.height = height + 'px';
-  modal.style.maxHeight = height + 'px';
+  const height = window.visualViewport ?
+    window.visualViewport.height :
+    window.innerHeight;
+  
+  overlay.style.height = `${height}px`;
 }
 
-// Listen for keyboard (visual viewport) changes
+// Listen to both visualViewport and window resize
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', fitModalToViewport);
-} else {
-  window.addEventListener('resize', fitModalToViewport);
 }
+
+window.addEventListener('resize', fitModalToViewport);
+
+
 
 async function openChatModal(room, friendName, user_db) {
   if (!room || !friendName) return;
@@ -443,6 +442,7 @@ async function openChatModal(room, friendName, user_db) {
   await loadMessages(room, user_db);
   
   chatModalOverlay.classList.add("active");
+  document.body.classList.add('no-scroll');
   fitModalToViewport()
   
   addRecent(room, friendName, user_db);
@@ -490,6 +490,7 @@ async function get_current_chat() {
 async function hideChatModal(){
  
   chatModalOverlay.classList.remove('active');
+  document.body.classList.remove('no-scroll');
 }
     
     
